@@ -3,7 +3,19 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List
 
-app = FastAPI(title="MandMandM - Notificaciones")
+from app.infrastructure.container import Container
+from app.infrastructure.handlers import auth as auth_handlers
+from app.infrastructure.handlers import oauth_redirect as oauth_handlers
+from app.infrastructure.public_ui import mount_public_ui
+
+app = FastAPI(title="MandMandM - Notificaciones + Auth")
+
+# Auth + OAuth (mismo proceso que notificaciones; Swagger unificado)
+app.include_router(auth_handlers.router)
+app.include_router(oauth_handlers.router)
+_container = Container()
+app.container = _container
+_container.wire(modules=["app.infrastructure.handlers.auth"])
 
 # Modelo para las notificaciones
 class CreateNotification(BaseModel):
@@ -36,3 +48,7 @@ async def create_notification(notification: CreateNotification):
     # Aquí debes guardar la notificación en la base de datos
     # Esta es solo una respuesta de ejemplo
     return {"message": "Notification created", "data": notification.dict()}
+
+
+# Vista por defecto → login/registro (HTML estático en /static/auth.html)
+mount_public_ui(app)

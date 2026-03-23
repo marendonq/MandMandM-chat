@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 .env
 .venv/
+
+# Credenciales OAuth locales (PowerShell, sin dotenv)
+backend/oauth_local.ps1
+oauth_local.ps1
