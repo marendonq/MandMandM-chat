@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -17,6 +17,10 @@ class AddUserToGroupRequest(BaseModel):
 class UpdateAdminRequest(BaseModel):
     actor_id: str
     user_id: str
+
+
+class GroupDeleteRequest(BaseModel):
+    actor_id: str
 
 
 class GroupResponse(BaseModel):

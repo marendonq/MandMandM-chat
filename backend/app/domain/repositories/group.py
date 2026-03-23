@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from app.domain.entities.group import GroupEntity
 
 
@@ -17,4 +17,8 @@ class GroupRepository(ABC):
 
     @abstractmethod
     def update(self, group: GroupEntity) -> GroupEntity:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, group_id: str) -> None:
         raise NotImplementedError

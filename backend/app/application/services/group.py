@@ -1,4 +1,4 @@
-from dataclasses import replace
+﻿from dataclasses import replace
 from app.domain.entities.group import GroupEntityFactory
 from app.domain.exceptions import (
     GroupNotFound,
@@ -6,16 +6,32 @@ from app.domain.exceptions import (
     UserNotInGroup,
     UnauthorizedGroupAction,
     CannotRemoveLastAdmin,
+    UserProfileNotFound,
+    GroupMemberMustBeContact,
 )
 from app.domain.repositories.group import GroupRepository
+from app.domain.repositories.user_profile import UserProfileRepository
 from app.domain.use_cases.group import GroupUseCases
 
 
 class GroupService(GroupUseCases):
-    def __init__(self, group_repository: GroupRepository):
+    def __init__(self, group_repository: GroupRepository, user_profile_repository: UserProfileRepository):
         self.group_repository = group_repository
+        self.user_profile_repository = user_profile_repository
+
+    def _require_profile(self, user_id: str):
+        profile = self.user_profile_repository.get_by_id(user_id)
+        if profile is None:
+            raise UserProfileNotFound()
+        return profile
 
     def create_group(self, name: str, description: str, created_by: str, members: list[str] | None = None):
+        owner = self._require_profile(created_by)
+        members = members or []
+        for member_id in members:
+            self._require_profile(member_id)
+            if member_id not in owner.contacts:
+                raise GroupMemberMustBeContact()
         return self.group_repository.add(
             GroupEntityFactory.create(name=name, description=description, created_by=created_by, members=members)
         )
@@ -31,8 +47,12 @@ class GroupService(GroupUseCases):
 
     def add_user_to_group(self, group_id: str, actor_id: str, user_id: str):
         group = self.get_group(group_id)
+        actor = self._require_profile(actor_id)
+        self._require_profile(user_id)
         if actor_id not in group.members:
             raise UnauthorizedGroupAction("Only group members can add users")
+        if user_id not in actor.contacts:
+            raise GroupMemberMustBeContact()
         if user_id in group.members:
             raise UserAlreadyInGroup()
         updated = replace(group, members=group.members + [user_id])
@@ -46,7 +66,7 @@ class GroupService(GroupUseCases):
             raise UserNotInGroup()
         new_members = [member for member in group.members if member != user_id]
         new_admins = [admin for admin in group.admins if admin != user_id]
-        if not new_admins:
+        if new_members and not new_admins:
             raise CannotRemoveLastAdmin()
         updated = replace(group, members=new_members, admins=new_admins)
         return self.group_repository.update(updated)
@@ -68,7 +88,13 @@ class GroupService(GroupUseCases):
             raise UserNotInGroup()
         new_members = [member for member in group.members if member != user_id]
         new_admins = [admin for admin in group.admins if admin != user_id]
-        if not new_admins:
+        if new_members and not new_admins:
             raise CannotRemoveLastAdmin()
         updated = replace(group, members=new_members, admins=new_admins)
         return self.group_repository.update(updated)
+
+    def delete_group(self, group_id: str, actor_id: str) -> None:
+        group = self.get_group(group_id)
+        if actor_id not in group.admins:
+            raise UnauthorizedGroupAction("Only admins can delete groups")
+        self.group_repository.delete(group_id)

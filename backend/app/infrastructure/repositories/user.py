@@ -1,11 +1,9 @@
-from copy import copy
-from app.domain.entities.user import UserEntity, UserEntityFactory
+﻿from copy import copy
+from app.domain.entities.user import UserEntity
 from app.domain.repositories.user import UserRepository
 
 
 class UserInMemoryRepository(UserRepository):
-    """Adaptador de salida: almacenamiento en memoria (sin persistencia real)."""
-
     def __init__(self):
         self._store: list[dict] = []
 

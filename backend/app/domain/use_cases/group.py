@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from app.domain.entities.group import GroupEntity
 
 
@@ -29,4 +29,8 @@ class GroupUseCases(ABC):
 
     @abstractmethod
     def exit_group(self, group_id: str, user_id: str) -> GroupEntity:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_group(self, group_id: str, actor_id: str) -> None:
         raise NotImplementedError

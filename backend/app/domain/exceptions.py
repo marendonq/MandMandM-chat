@@ -1,4 +1,4 @@
-# --- Auth module ---
+﻿# --- Auth module ---
 class InvalidEmail(Exception):
     def __init__(self):
         super().__init__("Invalid email format")
@@ -59,3 +59,34 @@ class UnauthorizedGroupAction(Exception):
 class CannotRemoveLastAdmin(Exception):
     def __init__(self):
         super().__init__("Cannot remove the last admin from the group")
+
+
+# --- User profile module ---
+class UserProfileNotFound(Exception):
+    def __init__(self):
+        super().__init__("User profile not found")
+
+
+class UserProfileAlreadyExists(Exception):
+    def __init__(self):
+        super().__init__("User profile already exists")
+
+
+class ContactAlreadyExists(Exception):
+    def __init__(self):
+        super().__init__("Contact already exists")
+
+
+class ContactNotFound(Exception):
+    def __init__(self):
+        super().__init__("Contact not found")
+
+
+class CannotAddSelfContact(Exception):
+    def __init__(self):
+        super().__init__("Cannot add self as contact")
+
+
+class GroupMemberMustBeContact(Exception):
+    def __init__(self):
+        super().__init__("Group members must be in your contacts")
