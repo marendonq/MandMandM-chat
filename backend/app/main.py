@@ -1,23 +1,12 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+"from pydantic import BaseModel
 from datetime import datetime
-from typing import List
 
-from app.infrastructure.container import Container
-from app.infrastructure.handlers import auth as auth_handlers
-from app.infrastructure.handlers import oauth_redirect as oauth_handlers
-from app.infrastructure.public_ui import mount_public_ui
+from app.infrastructure.fast_api import create_app
 
-app = FastAPI(title="MandMandM - Notificaciones + Auth")
+# App monol�tica: auth + OAuth + UI (create_app) + notificaciones (aqu�)
+app = create_app()
 
-# Auth + OAuth (mismo proceso que notificaciones; Swagger unificado)
-app.include_router(auth_handlers.router)
-app.include_router(oauth_handlers.router)
-_container = Container()
-app.container = _container
-_container.wire(modules=["app.infrastructure.handlers.auth"])
 
-# Modelo para las notificaciones
 class CreateNotification(BaseModel):
     user_id: str
     type: str
@@ -26,29 +15,18 @@ class CreateNotification(BaseModel):
     created_at: datetime
 
 
-# Endpoint para obtener las notificaciones de un usuario
-@app.get("/notifications/{user_id}")
+@app.get('/notifications/{user_id}')
 async def get_user_notifications(user_id: str):
-    # Aquí deberías conectar a la base de datos y recuperar las notificaciones del usuario
-    # Esta es solo una respuesta de ejemplo
-    return {"user_id": user_id, "notifications": []}
+    return {'user_id': user_id, 'notifications': []}
 
 
-# Endpoint para marcar una notificación como leída
-@app.patch("/notifications/{item_id}/read")
+@app.patch('/notifications/{item_id}/read')
 async def mark_as_read(item_id: str, read: bool = True):
-    # Aquí va tu lógica para actualizar la notificación en la base de datos
-    status = "read" if read else "not_read"
-    return {"item_id": item_id, "status": status}
+    status = 'read' if read else 'not_read'
+    return {'item_id': item_id, 'status': status}
 
 
-# Endpoint para crear una nueva notificación
-@app.post("/notifications/")
+@app.post('/notifications/')
 async def create_notification(notification: CreateNotification):
-    # Aquí debes guardar la notificación en la base de datos
-    # Esta es solo una respuesta de ejemplo
-    return {"message": "Notification created", "data": notification.dict()}
-
-
-# Vista por defecto → login/registro (HTML estático en /static/auth.html)
-mount_public_ui(app)
+    return {'message': 'Notification created', 'data': notification.dict()}
+"
