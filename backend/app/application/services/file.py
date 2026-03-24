@@ -8,7 +8,7 @@ from domain.use_cases.file import (
 )
 
 from domain.repositories.file import FileRepository
-from domain.ports.file_storage import FileStorege
+from domain.ports.file_storage import FileStorage
 from domain.entities.file import FileEntity, FileType, FileEntityFactory
 
 import uuid

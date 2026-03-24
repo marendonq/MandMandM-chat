@@ -10,6 +10,10 @@ class FileType(str, Enum):
     DOCUMENT = "document"
     VIDEO = "video"
 
+    @property
+    def is_image(self) -> bool:
+        return self == FileType.IMAGE
+
 class FileEntity:
 
     def __init__(
@@ -81,7 +85,7 @@ class FileEntity:
     @staticmethod
     def _validate_thumbnail(thumbnail_path: Optional[str], file_type):
 
-        if thumbnail_path and not file_type.is_image():
+        if thumbnail_path and not file_type.is_image:
             raise ValueError("Only image files can have a thumbnail")
 
 
