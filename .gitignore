@@ -7,4 +7,4 @@ __pycache__/
 # Credenciales OAuth locales (PowerShell, sin dotenv)
 backend/oauth_local.ps1
 oauth_local.ps1
->>>>>>> a37be64a6c2a01be5b222ccb1d646270bb37c79e
+

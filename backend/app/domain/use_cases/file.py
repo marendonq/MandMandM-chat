@@ -1,37 +1,39 @@
-import uuid
-from datetime import datetime
-from domain.file import File
-from domain.file_repository import FileRepositiory
+from abc import ABC, abstractmethod
+from typing import Optional
+from domain.entities.file import FileEntity, FileType
 
-class UploadFileUseCase:
 
-    def __init__(self, file_repository: FileRepositiory)-> None:
-        self.file_repository = file_repository
+class UploadFileUseCase(ABC):
 
+    @abstractmethod
     def execute(
         self,
-        uploader_id: str,
+        file_bytes: bytes,
         file_name: str,
-        file_type,
-        storage_path: str, 
-        message_id: str = None,
-        file_size: int = None,
-        thumbnail_path: str = None
-    )-> File:
-        
-        file = File(
-            id=str(uuid.uuid4()),
-            uploader_id=uploader_id,
-            message_id=message_id,
-            file_size=file_size,
-            file_name=file_name,
-            file_type=file_type,
-            storage_path=storage_path,
-            thumbnail_path=thumbnail_path,
-            created_at=datetime.utcnow()
-        )
+        file_type: FileType,
+        uploader_id: str,
+        message_id: str,
+        thumbnail_path: Optional[str] = None
+    ) -> FileEntity:
+        pass
 
 
-        self.file_repository.save(file)
+class GetFileUseCase(ABC):
 
-        return file
+    @abstractmethod
+    def execute(self, file_id: str) -> FileEntity:
+        pass
+
+
+class GetFilesByMessageUseCase(ABC):
+
+    @abstractmethod
+    def execute(self, message_id: str) -> list[FileEntity]:
+        pass
+
+
+class DeleteFileUseCase(ABC):
+
+    @abstractmethod
+    def execute(self, file_id: str) -> None:
+        pass
