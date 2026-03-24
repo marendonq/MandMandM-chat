@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, List
 from domain.entities.file import FileEntity
 
-class FileRepositiory(ABC):
+class FileRepository(ABC):
 
     @abstractmethod
     def save(self, file: FileEntity) -> None:
