@@ -1,4 +1,4 @@
-﻿# --- Auth module ---
+# --- Auth module ---
 class InvalidEmail(Exception):
     def __init__(self):
         super().__init__("Invalid email format")
@@ -90,3 +90,19 @@ class CannotAddSelfContact(Exception):
 class GroupMemberMustBeContact(Exception):
     def __init__(self):
         super().__init__("Group members must be in your contacts")
+
+
+# --- Presence module ---
+class MessageReceiptNotFound(Exception):
+    def __init__(self):
+        super().__init__("Message receipt not found")
+
+
+class InvalidMessageReceiptTransition(Exception):
+    def __init__(self, message: str = "Invalid message receipt status transition"):
+        super().__init__(message)
+
+
+class MessageReceiptAlreadyExists(Exception):
+    def __init__(self):
+        super().__init__("Message receipt already exists for this recipient")
