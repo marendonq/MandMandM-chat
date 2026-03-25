@@ -1,5 +1,7 @@
 from dependency_injector.wiring import inject, Provide
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
+from datetime import datetime
 from app.application.services.conversation import ConversationService
 from app.domain.exceptions import (
     ConversationNotFound,
@@ -145,3 +147,33 @@ def leave_conversation(conversation_id: str, user_id: str, service: Conversation
         raise HTTPException(status_code=404, detail='User not in conversation')
     except CannotRemoveLastConversationAdmin:
         raise HTTPException(status_code=400, detail='Cannot remove the last admin from the conversation')
+
+
+# --- Message endpoints under conversations ---
+# Import message schemas and service for conversation messages
+from app.infrastructure.schemas.message import MessageListResponse
+from app.application.services.message import MessageService
+
+
+@router.get('/{conversation_id}/messages', response_model=MessageListResponse)
+@inject
+def get_conversation_messages(
+    conversation_id: str,
+    limit: int = Query(default=50, ge=1, le=100, description="Maximum messages to return"),
+    before: Optional[datetime] = Query(default=None, description="Cursor for pagination"),
+    message_service: MessageService = Depends(Provide[Container.message_service]),
+):
+    """Get messages from a conversation with pagination"""
+    try:
+        messages = message_service.get_messages(
+            conversation_id=conversation_id,
+            limit=limit,
+            before=before,
+        )
+        return MessageListResponse.from_entities(
+            entities=messages,
+            total=len(messages),
+            limit=limit,
+        )
+    except ConversationNotFound:
+        raise HTTPException(status_code=404, detail='Conversation not found')
