@@ -26,6 +26,7 @@ from app.application.services.file import (
     DeleteFileService,
 )
 from app.application.services.file_asset import FileAssetService
+from app.application.services.message import MessageService
 
 
 def _make_user_repository():
@@ -100,3 +101,9 @@ class Container(containers.DeclarativeContainer):
     get_files_by_message_service = providers.Factory(GetFilesByMessageService, repo=file_repository)
     delete_file_service = providers.Factory(DeleteFileService, repo=file_repository, storage=file_storage)
     file_asset_service = providers.Factory(FileAssetService, file_asset_repository)
+    message_service = providers.Factory(
+        MessageService,
+        message_repository=message_repository,
+        conversation_repository=conversation_repository,
+        user_profile_repository=user_profile_repository,
+    )
