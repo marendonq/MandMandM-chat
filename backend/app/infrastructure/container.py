@@ -3,7 +3,7 @@ from app.infrastructure.handlers import Handlers
 from app.infrastructure.repositories.user import UserInMemoryRepository
 from app.infrastructure.repositories.user_profile import UserProfileInMemoryRepository
 from app.infrastructure.repositories.notification import NotificationInMemoryRepository
-from app.infrastructure.repositories.group import GroupInMemoryRepository
+from app.infrastructure.repositories.conversation import ConversationInMemoryRepository
 from app.infrastructure.repositories.presence import PresenceInMemoryRepository
 from app.infrastructure.repositories.file import FileInMemoryRepository
 from app.infrastructure.storage.local_file_storage import LocalFileStorageAdapter
@@ -11,7 +11,7 @@ from app.infrastructure.auth.jwt_token import JwtAuthTokenAdapter
 from app.infrastructure.auth.password import BcryptPasswordAdapter
 from app.application.services.auth import AuthService
 from app.application.services.notification import NotificationService
-from app.application.services.group import GroupService
+from app.application.services.conversation import ConversationService
 from app.application.services.user_profile import UserProfileService
 from app.application.services.presence import PresenceService
 from app.application.services.file import (
@@ -28,7 +28,7 @@ class Container(containers.DeclarativeContainer):
     user_repository = providers.Singleton(UserInMemoryRepository)
     user_profile_repository = providers.Singleton(UserProfileInMemoryRepository)
     notification_repository = providers.Singleton(NotificationInMemoryRepository)
-    group_repository = providers.Singleton(GroupInMemoryRepository)
+    conversation_repository = providers.Singleton(ConversationInMemoryRepository)
     presence_repository = providers.Singleton(PresenceInMemoryRepository)
     file_repository = providers.Singleton(FileInMemoryRepository)
     file_storage = providers.Singleton(LocalFileStorageAdapter)
@@ -38,8 +38,8 @@ class Container(containers.DeclarativeContainer):
 
     auth_service = providers.Factory(AuthService, user_repository, auth_token_port, password_port)
     notification_service = providers.Factory(NotificationService, notification_repository)
-    group_service = providers.Factory(GroupService, group_repository, user_profile_repository)
-    user_profile_service = providers.Factory(UserProfileService, user_profile_repository, group_repository)
+    conversation_service = providers.Factory(ConversationService, conversation_repository=conversation_repository, user_profile_repository=user_profile_repository)
+    user_profile_service = providers.Factory(UserProfileService, user_profile_repository, conversation_repository)
     presence_service = providers.Factory(PresenceService, presence_repository)
 
     upload_file_service = providers.Factory(UploadFileService, repo=file_repository, storage=file_storage)

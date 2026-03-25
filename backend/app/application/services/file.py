@@ -1,5 +1,3 @@
-# application/services/file/upload_file_service.py
-
 from domain.use_cases.file import (
     UploadFileUseCase,
     GetFileUseCase,

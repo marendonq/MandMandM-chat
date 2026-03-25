@@ -106,3 +106,11 @@ class InvalidMessageReceiptTransition(Exception):
 class MessageReceiptAlreadyExists(Exception):
     def __init__(self):
         super().__init__("Message receipt already exists for this recipient")
+
+
+# --- Conversation module (aliases to Group exceptions for backward compatibility) ---
+ConversationNotFound = GroupNotFound
+UserAlreadyInConversation = UserAlreadyInGroup
+UserNotInConversation = UserNotInGroup
+UnauthorizedConversationAction = UnauthorizedGroupAction
+ConversationMemberMustBeContact = GroupMemberMustBeContact
