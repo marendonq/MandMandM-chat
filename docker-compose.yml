@@ -33,6 +33,15 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: mandmandm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - mandmandm-redis-data:/data
+
 volumes:
   mandmandm-pg-data:
   mandmandm-mongo-data:
+  mandmandm-redis-data:

@@ -192,3 +192,16 @@ Sin `DATABASE_URL`, los repositorios usan **memoria**.
 | `backend/scripts/postgres_schema.sql` | DDL opcional |
 | `app/infrastructure/database/session.py` | Engine y `create_all` |
 | `app/infrastructure/container.py` | Memoria vs Postgres |
+
+
+# Postgres (y corre test_postgres_integration)
+powershell -NoProfile -ExecutionPolicy Bypass -File .\e2e\run-postgres.ps1
+
+# Mongo (y corre test_mongo_messages)
+powershell -NoProfile -ExecutionPolicy Bypass -File .\e2e\run-mongo.ps1
+
+# Redis (y corre test_redis_presence)
+powershell -NoProfile -ExecutionPolicy Bypass -File .\e2e\run-redis.ps1
+
+# Todo junto (Postgres + Mongo + Redis + toda la suite)
+powershell -NoProfile -ExecutionPolicy Bypass -File .\e2e\run-all.ps1

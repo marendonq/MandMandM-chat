@@ -1,3 +1,4 @@
+import os
 from dependency_injector import containers, providers
 
 from app.infrastructure.handlers import Handlers
@@ -64,6 +65,23 @@ def _make_file_asset_repository():
     return FileAssetPostgresRepository(sf)
 
 
+def _make_presence_repository():
+    """
+    Preferimos Redis para presencia, pero si Redis no está disponible
+    (dev sin contenedor, CI, etc.) degradamos a InMemory para no romper el arranque.
+    """
+
+    try:
+        from app.infrastructure.database.redis import RedisConnection
+        from app.infrastructure.repositories.presence_redis import PresenceRedisRepository
+
+        redis_conn = RedisConnection()
+        namespace = os.getenv("PRESENCE_REDIS_NAMESPACE", "presence")
+        return PresenceRedisRepository(redis_conn.get_client(), namespace=namespace)
+    except Exception:
+        return PresenceInMemoryRepository()
+
+
 class Container(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(modules=Handlers.modules())
 
@@ -77,7 +95,7 @@ class Container(containers.DeclarativeContainer):
     conversation_repository = providers.Singleton(MongoConversationRepository, database=mongo_database)
     message_repository = providers.Singleton(MongoMessageRepository, database=mongo_database)
 
-    presence_repository = providers.Singleton(PresenceInMemoryRepository)
+    presence_repository = providers.Singleton(_make_presence_repository)
     file_repository = providers.Singleton(FileInMemoryRepository)
     file_storage = providers.Singleton(LocalFileStorageAdapter)
     file_asset_repository = providers.Singleton(_make_file_asset_repository)
