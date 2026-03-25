@@ -168,3 +168,9 @@ class MessageAlreadyDeleted(Exception):
 class FileNotFound(Exception):
     def __init__(self):
         super().__init__("File not found")
+
+
+# --- Metadatos de ficheros en PostgreSQL (tabla file_assets) ---
+class FileAssetNotFound(Exception):
+    def __init__(self):
+        super().__init__("File asset not found")

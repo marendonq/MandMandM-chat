@@ -1,13 +1,13 @@
-from domain.use_cases.file import (
+from app.domain.use_cases.file import (
     UploadFileUseCase,
     GetFileUseCase,
     GetFilesByMessageUseCase,
-    DeleteFileUseCase
+    DeleteFileUseCase,
 )
 
-from domain.repositories.file import FileRepository
-from domain.ports.file_storage import FileStorage
-from domain.entities.file import FileEntity, FileType, FileEntityFactory
+from app.domain.repositories.file import FileRepository
+from app.domain.ports.file_storage import FileStorage
+from app.domain.entities.file import FileEntity, FileType, FileEntityFactory
 
 import uuid
 

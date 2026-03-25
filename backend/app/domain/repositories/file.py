@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
-from domain.entities.file import FileEntity
+from app.domain.entities.file import FileEntity
 
 class FileRepository(ABC):
 

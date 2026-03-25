@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from domain.entities.file import FileEntity, FileType
+from app.domain.entities.file import FileEntity, FileType
 
 
 class UploadFileUseCase(ABC):

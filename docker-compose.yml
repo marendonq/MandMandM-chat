@@ -1,0 +1,27 @@
+# PostgreSQL de desarrollo compartido por el equipo.
+# Uso (desde la raíz del repo MandMandM):  docker compose up -d
+# Parar:  docker compose down   (los datos siguen en el volumen)
+#
+# Si el puerto 5432 ya lo usa PostgreSQL en Windows, cambia "5432:5432" por "5433:5432"
+# y en backend/.env usa el puerto 5433 en DATABASE_URL.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: mandmandm-pg
+    environment:
+      POSTGRES_USER: mandmandm
+      POSTGRES_PASSWORD: mandmandm
+      POSTGRES_DB: mandmandm
+    ports:
+      - "5432:5432"
+    volumes:
+      - mandmandm-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mandmandm -d mandmandm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mandmandm-pg-data:
