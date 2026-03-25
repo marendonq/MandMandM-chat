@@ -1,4 +1,7 @@
 from copy import copy
+
+from pymongo.database import Database
+
 from app.domain.entities.conversation import ConversationEntity, ConversationType
 from app.domain.repositories.conversation import ConversationRepository
 
@@ -59,19 +62,25 @@ class ConversationInMemoryRepository(ConversationRepository):
             invitation_link=row.get('invitation_link'),
         )
 
-from pymongo.database import Database
-
 
 class MongoConversationRepository(ConversationRepository):
     def __init__(self, database: Database):
         self._collection = database["conversations"]
+
+    @staticmethod
+    def _entity_to_row(conversation: ConversationEntity) -> dict:
+        return ConversationInMemoryRepository._entity_to_row(conversation)
+
+    @staticmethod
+    def _row_to_entity(row: dict) -> ConversationEntity:
+        return ConversationInMemoryRepository._row_to_entity(row)
 
     def add(self, conversation: ConversationEntity) -> ConversationEntity:
         self._collection.insert_one(self._entity_to_row(conversation))
         return conversation
 
     def get_by_id(self, conversation_id: str) -> ConversationEntity | None:
-        row = self._collection.find_one({"id": conversation_id})
+        row = self._collection.find_one({"id": conversation_id}, {"_id": 0})
         return self._row_to_entity(row) if row else None
 
     def list_all(self) -> list[ConversationEntity]:
