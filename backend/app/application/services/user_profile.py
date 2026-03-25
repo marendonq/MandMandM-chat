@@ -1,7 +1,7 @@
 ﻿from dataclasses import replace
 from app.domain.entities.user_profile import UserProfileEntityFactory
 from app.domain.repositories.user_profile import UserProfileRepository
-from app.domain.repositories.group import GroupRepository
+from app.domain.repositories.conversation import ConversationRepository
 from app.domain.use_cases.user_profile import UserProfileUseCases
 from app.domain.exceptions import (
     UserProfileNotFound,
@@ -12,9 +12,9 @@ from app.domain.exceptions import (
 
 
 class UserProfileService(UserProfileUseCases):
-    def __init__(self, user_profile_repository: UserProfileRepository, group_repository: GroupRepository):
+    def __init__(self, user_profile_repository: UserProfileRepository, conversation_repository: ConversationRepository):
         self.user_profile_repository = user_profile_repository
-        self.group_repository = group_repository
+        self.conversation_repository = conversation_repository
 
     def upsert_oauth_profile(self, provider: str, subject: str, email: str, full_name: str, picture: str | None = None):
         existing = self.user_profile_repository.get_by_oauth(provider, subject)
@@ -63,18 +63,18 @@ class UserProfileService(UserProfileUseCases):
             if contact is not None:
                 updated = replace(contact, contacts=[c for c in contact.contacts if c != owner.id])
                 self.user_profile_repository.update(updated)
-        # clean groups membership and delete owned groups
-        for group in self.group_repository.list_all():
-            if owner.id == group.created_by:
-                self.group_repository.delete(group.id)
+        # clean conversation membership and delete owned conversations
+        for conversation in self.conversation_repository.list_all():
+            if owner.id == conversation.created_by:
+                self.conversation_repository.delete(conversation.id)
                 continue
-            if owner.id in group.members:
-                new_members = [m for m in group.members if m != owner.id]
-                new_admins = [a for a in group.admins if a != owner.id]
+            if owner.id in conversation.members:
+                new_members = [m for m in conversation.members if m != owner.id]
+                new_admins = [a for a in conversation.admins if a != owner.id] if conversation.admins else []
                 if not new_members:
-                    self.group_repository.delete(group.id)
+                    self.conversation_repository.delete(conversation.id)
                 else:
                     if not new_admins:
                         new_admins = [new_members[0]]
-                    self.group_repository.update(replace(group, members=new_members, admins=new_admins))
+                    self.conversation_repository.update(replace(conversation, members=new_members, admins=new_admins))
         self.user_profile_repository.delete(owner.id)
