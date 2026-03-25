@@ -1,4 +1,4 @@
-﻿"""
+"""
 Redirecciones OAuth 2.0 (Authorization Code) hacia proveedores.
 """
 import os
@@ -89,7 +89,8 @@ async def oauth_authorize(provider: str) -> RedirectResponse:
 
     if pid == 'google':
         client_id = os.environ.get('OAUTH_GOOGLE_CLIENT_ID')
-        if not client_id:
+        client_secret = os.environ.get('OAUTH_GOOGLE_CLIENT_SECRET')
+        if (not client_id) or (not client_secret):
             return RedirectResponse(url='/static/auth.html?oauth=missing&idp=google', status_code=302)
         q = urlencode({'client_id': client_id, 'redirect_uri': redirect_uri, 'response_type': 'code', 'scope': 'openid email profile', 'state': state, 'access_type': 'online'})
         return RedirectResponse(url=f"https://accounts.google.com/o/oauth2/v2/auth?{q}", status_code=302)
