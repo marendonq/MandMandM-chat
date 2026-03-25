@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional
-from backend.app.domain.entities.message import MessageEntity
+from app.domain.entities.message import MessageEntity
 
 
 class MessageUseCases(ABC):

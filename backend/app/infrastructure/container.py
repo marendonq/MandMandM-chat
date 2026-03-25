@@ -4,10 +4,12 @@ from app.infrastructure.handlers import Handlers
 from app.infrastructure.repositories.user import UserInMemoryRepository
 from app.infrastructure.repositories.user_profile import UserProfileInMemoryRepository
 from app.infrastructure.repositories.notification import NotificationInMemoryRepository
-from app.infrastructure.repositories.conversation import ConversationInMemoryRepository
+from app.infrastructure.repositories.conversation import MongoConversationRepository
+from app.infrastructure.repositories.message import MongoMessageRepository
 from app.infrastructure.repositories.presence import PresenceInMemoryRepository
 from app.infrastructure.repositories.file import FileInMemoryRepository
 from app.infrastructure.repositories.file_asset import FileAssetInMemoryRepository
+from app.infrastructure.database.mongo import MongoConnection
 from app.infrastructure.storage.local_file_storage import LocalFileStorageAdapter
 from app.infrastructure.database.session import session_factory as get_session_factory
 from app.infrastructure.auth.jwt_token import JwtAuthTokenAdapter
@@ -68,7 +70,13 @@ class Container(containers.DeclarativeContainer):
     user_repository = providers.Singleton(_make_user_repository)
     user_profile_repository = providers.Singleton(_make_user_profile_repository)
     notification_repository = providers.Singleton(_make_notification_repository)
-    conversation_repository = providers.Singleton(ConversationInMemoryRepository)
+
+    mongo_connection = providers.Singleton(MongoConnection)
+    mongo_database = providers.Callable(lambda conn: conn.get_database(), mongo_connection)
+
+    conversation_repository = providers.Singleton(MongoConversationRepository, database=mongo_database)
+    message_repository = providers.Singleton(MongoMessageRepository, database=mongo_database)
+
     presence_repository = providers.Singleton(PresenceInMemoryRepository)
     file_repository = providers.Singleton(FileInMemoryRepository)
     file_storage = providers.Singleton(LocalFileStorageAdapter)

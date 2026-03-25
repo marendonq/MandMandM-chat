@@ -58,3 +58,32 @@ class ConversationInMemoryRepository(ConversationRepository):
             admins=list(row['admins']) if row.get('admins') else None,
             invitation_link=row.get('invitation_link'),
         )
+
+from pymongo.database import Database
+
+
+class MongoConversationRepository(ConversationRepository):
+    def __init__(self, database: Database):
+        self._collection = database["conversations"]
+
+    def add(self, conversation: ConversationEntity) -> ConversationEntity:
+        self._collection.insert_one(self._entity_to_row(conversation))
+        return conversation
+
+    def get_by_id(self, conversation_id: str) -> ConversationEntity | None:
+        row = self._collection.find_one({"id": conversation_id})
+        return self._row_to_entity(row) if row else None
+
+    def list_all(self) -> list[ConversationEntity]:
+        return [self._row_to_entity(row) for row in self._collection.find({}, {"_id": 0})]
+
+    def update(self, conversation: ConversationEntity) -> ConversationEntity:
+        self._collection.replace_one(
+            {"id": conversation.id},
+            self._entity_to_row(conversation),
+            upsert=True,
+        )
+        return conversation
+
+    def delete(self, conversation_id: str) -> None:
+        self._collection.delete_one({"id": conversation_id})

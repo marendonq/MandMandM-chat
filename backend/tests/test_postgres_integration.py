@@ -1,12 +1,16 @@
 """
-Integración con PostgreSQL: conexión directa + flujos HTTP que usan los repositorios Postgres.
+Integración: PostgreSQL + (donde aplique) MongoDB.
 
-Requisitos: contenedor Postgres en marcha y DATABASE_URL en backend/.env (o en el entorno).
+Requisitos Postgres: contenedor en marcha y DATABASE_URL en backend/.env (o en el entorno).
 Sin DATABASE_URL las pruebas se omiten.
+
+Las rutas que persisten conversaciones en Mongo requieren MongoDB (p. ej. docker compose up -d
+desde la raíz del repo). Si no hay servidor en MONGO_URI, esas pruebas se omiten.
 """
 
 from __future__ import annotations
 
+import os
 import uuid
 
 import pytest
@@ -21,6 +25,24 @@ def _require_postgres_url():
     if not url:
         pytest.skip("DATABASE_URL no definida: define backend/.env o exporta la variable para probar PostgreSQL.")
     return url
+
+
+def _require_mongo():
+    """Conversaciones/mensajes usan Mongo; sin servidor la prueba no aporta y PyMongo esperaría ~30s."""
+    try:
+        from pymongo import MongoClient
+    except ImportError:
+        pytest.skip("pymongo no instalado.")
+    uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+    try:
+        client = MongoClient(uri, serverSelectionTimeoutMS=2500)
+        client.admin.command("ping")
+        client.close()
+    except Exception as exc:
+        pytest.skip(
+            f"MongoDB no accesible en {uri!r}: {exc!r}. "
+            "Levanta el servicio (p. ej. docker compose up -d en la raíz del repo)."
+        )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -111,6 +133,7 @@ def test_api_notifications_create_and_list(client: TestClient):
 
 
 def test_api_profiles_contacts_conversation_and_file_metadata(client: TestClient):
+    _require_mongo()
     sub_a = f"sub-a-{uuid.uuid4().hex[:8]}"
     sub_b = f"sub-b-{uuid.uuid4().hex[:8]}"
 
