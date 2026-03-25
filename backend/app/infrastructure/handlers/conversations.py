@@ -6,7 +6,7 @@ from app.domain.exceptions import (
     UserAlreadyInConversation,
     UserNotInConversation,
     UnauthorizedConversationAction,
-    CannotRemoveLastAdmin,
+    CannotRemoveLastConversationAdmin,
     UserProfileNotFound,
     ConversationMemberMustBeContact,
 )
@@ -117,7 +117,7 @@ def remove_user_from_conversation(conversation_id: str, user_id: str, actor_id: 
         raise HTTPException(status_code=404, detail='User not in conversation')
     except UnauthorizedConversationAction as e:
         raise HTTPException(status_code=403, detail=str(e))
-    except CannotRemoveLastAdmin:
+    except CannotRemoveLastConversationAdmin:
         raise HTTPException(status_code=400, detail='Cannot remove the last admin from the conversation')
 
 
@@ -143,5 +143,5 @@ def leave_conversation(conversation_id: str, user_id: str, service: Conversation
         raise HTTPException(status_code=404, detail='Conversation not found')
     except UserNotInConversation:
         raise HTTPException(status_code=404, detail='User not in conversation')
-    except CannotRemoveLastAdmin:
+    except CannotRemoveLastConversationAdmin:
         raise HTTPException(status_code=400, detail='Cannot remove the last admin from the conversation')

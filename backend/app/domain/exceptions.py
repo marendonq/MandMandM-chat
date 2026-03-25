@@ -61,6 +61,37 @@ class CannotRemoveLastAdmin(Exception):
         super().__init__("Cannot remove the last admin from the group")
 
 
+# --- Conversation module ---
+class ConversationNotFound(Exception):
+    def __init__(self):
+        super().__init__("Conversation not found")
+
+
+class UserAlreadyInConversation(Exception):
+    def __init__(self):
+        super().__init__("User already in conversation")
+
+
+class UserNotInConversation(Exception):
+    def __init__(self):
+        super().__init__("User not in conversation")
+
+
+class UnauthorizedConversationAction(Exception):
+    def __init__(self, message: str = "Unauthorized conversation action"):
+        super().__init__(message)
+
+
+class ConversationMemberMustBeContact(Exception):
+    def __init__(self):
+        super().__init__("Conversation members must be in your contacts")
+
+
+class CannotRemoveLastConversationAdmin(Exception):
+    def __init__(self):
+        super().__init__("Cannot remove the last admin from the conversation")
+
+
 # --- User profile module ---
 class UserProfileNotFound(Exception):
     def __init__(self):
@@ -108,9 +139,32 @@ class MessageReceiptAlreadyExists(Exception):
         super().__init__("Message receipt already exists for this recipient")
 
 
-# --- Conversation module (aliases to Group exceptions for backward compatibility) ---
-ConversationNotFound = GroupNotFound
-UserAlreadyInConversation = UserAlreadyInGroup
-UserNotInConversation = UserNotInGroup
-UnauthorizedConversationAction = UnauthorizedGroupAction
-ConversationMemberMustBeContact = GroupMemberMustBeContact
+# --- Message module ---
+class MessageNotFound(Exception):
+    def __init__(self):
+        super().__init__("Message not found")
+
+
+class InvalidMessageContent(Exception):
+    def __init__(self):
+        super().__init__("Invalid message content")
+
+
+class UnauthorizedMessageAction(Exception):
+    def __init__(self, message: str = "Unauthorized message action"):
+        super().__init__(message)
+
+
+class ConversationNotMember(Exception):
+    def __init__(self):
+        super().__init__("User is not a member of this conversation")
+
+
+class MessageAlreadyDeleted(Exception):
+    def __init__(self):
+        super().__init__("Message already deleted")
+
+
+class FileNotFound(Exception):
+    def __init__(self):
+        super().__init__("File not found")
