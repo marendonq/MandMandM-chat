@@ -35,6 +35,13 @@ class UserPostgresRepository(UserRepository):
             s.commit()
         return user
 
+    def delete_by_id(self, user_id: str) -> None:
+        with self._session() as s:
+            row = s.get(AuthUserModel, user_id)
+            if row is not None:
+                s.delete(row)
+            s.commit()
+
     @staticmethod
     def _to_entity(row: AuthUserModel) -> UserEntity:
         return UserEntity(

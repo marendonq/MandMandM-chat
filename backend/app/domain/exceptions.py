@@ -14,6 +14,23 @@ class UserAlreadyExists(Exception):
         super().__init__("A user with this email already exists")
 
 
+class PhoneNumberAlreadyInUse(Exception):
+    def __init__(self):
+        super().__init__("This phone number is already registered")
+
+
+class InvalidPhoneNumber(Exception):
+    def __init__(self):
+        super().__init__("Invalid phone number format")
+
+
+class OAuthAccountAlreadyRegistered(Exception):
+    """La cuenta OAuth ya tiene perfil; debe iniciar sesión de nuevo sin paso de teléfono."""
+
+    def __init__(self):
+        super().__init__("OAuth account already registered")
+
+
 class InvalidCredentials(Exception):
     def __init__(self):
         super().__init__("Invalid email or password")

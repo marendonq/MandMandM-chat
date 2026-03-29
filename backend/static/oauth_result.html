@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M&M OAuth Result</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main style="max-width:720px;margin:50px auto;padding:16px;">
+    <div id="banner" class="banner"></div>
+    <div class="card stack">
+      <h1 class="title">Procesando autenticación OAuth...</h1>
+      <p class="muted">Serás redirigido automáticamente.</p>
+      <pre id="details" class="item muted">—</pre>
+      <div class="row">
+        <a class="btn" href="/static/auth.html">Volver a login</a>
+        <a class="btn btn-primary" href="/static/app.html">Ir a la app</a>
+      </div>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const q = new URLSearchParams(window.location.search);
+      const ok = q.get("ok") === "1";
+      const payloadRaw = q.get("payload") || "{}";
+      const banner = document.getElementById("banner");
+      const details = document.getElementById("details");
+
+      let payload;
+      try {
+        payload = JSON.parse(payloadRaw);
+      } catch (e) {
+        payload = { detail: "No se pudo parsear payload OAuth", error: String(e) };
+      }
+
+      details.textContent = JSON.stringify(payload, null, 2);
+
+      if (ok && payload && payload.access_token && payload.user && payload.user.id) {
+        const session = {
+          access_token: payload.access_token,
+          token_type: payload.token_type || "bearer",
+          provider: payload.provider || "google",
+          user: payload.user,
+        };
+        localStorage.setItem("mm_session", JSON.stringify(session));
+        banner.className = "banner ok";
+        banner.textContent = "OAuth exitoso. Redirigiendo a la app...";
+        setTimeout(() => {
+          window.location.href = "/static/app.html";
+        }, 1200);
+        return;
+      }
+
+      banner.className = "banner error";
+      banner.textContent = "OAuth falló. Revisa el detalle y vuelve a intentar.";
+      setTimeout(() => {
+        window.location.href = "/static/auth.html?oauth=failed&idp=google";
+      }, 2200);
+    })();
+  </script>
+</body>
+</html>

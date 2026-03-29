@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M&M Chat</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="layout layout-three">
+    <!-- 20%: perfil, contactos, notificaciones -->
+    <aside class="col col-left stack">
+      <div class="card stack">
+        <div class="row" style="justify-content:space-between;">
+          <h1 class="title">M&M Chat</h1>
+          <button id="btnLogout" class="btn">Salir</button>
+        </div>
+        <div id="sessionInfo" class="muted">Cargando sesión...</div>
+        <div class="row">
+          <button id="btnRefreshAll" class="btn btn-primary">Actualizar</button>
+          <button id="btnDeleteAccount" class="btn btn-danger">Eliminar cuenta</button>
+        </div>
+      </div>
+
+      <div class="card stack flex-grow">
+        <h2 class="title">Contactos</h2>
+        <div id="contactsList" class="contacts-list"></div>
+      </div>
+
+      <div class="card stack">
+        <h2 class="title">Notificaciones</h2>
+        <div class="row">
+          <button id="btnCreateNotif" class="btn">Crear prueba</button>
+          <button id="btnLoadNotif" class="btn">Recargar</button>
+        </div>
+        <div id="notifList" class="notif-list"></div>
+      </div>
+    </aside>
+
+    <!-- 60%: vista de chat activa -->
+    <main class="col col-center stack">
+      <div id="banner"></div>
+
+      <div class="card stack chat-panel">
+        <div class="row" style="justify-content:space-between;">
+          <h2 id="chatTitle" class="title">Selecciona una conversación</h2>
+          <div class="row">
+            <span id="presencePill" class="pill offline">offline</span>
+            <button id="btnDeleteConversation" class="btn btn-danger" disabled>Eliminar grupo</button>
+          </div>
+        </div>
+        <div id="messageArea" class="message-area muted">No hay conversación activa.</div>
+        <div class="row">
+          <textarea id="messageInput" placeholder="Escribe un mensaje"></textarea>
+        </div>
+        <div class="row">
+          <button id="btnSendMessage" class="btn btn-primary" disabled>Enviar</button>
+        </div>
+        <p class="muted small-hint" style="margin:0;">
+          Los recibos se actualizan solos: entregado al abrir la app, leído al abrir cada chat.
+        </p>
+      </div>
+    </main>
+
+    <!-- 20%: solo chats/grupos donde participas -->
+    <aside class="col col-right stack">
+      <div class="card stack flex-grow">
+        <h2 class="title">Tus chats y grupos</h2>
+        <p class="muted small-hint">Solo se listan conversaciones en las que tu perfil es miembro.</p>
+        <div class="row">
+          <button id="btnCreatePrivate" class="btn">Chat privado</button>
+          <button id="btnCreateGroup" class="btn btn-primary">Crear grupo</button>
+        </div>
+        <div id="conversationList" class="chat-list chat-list-sidebar"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Modal: nuevo chat privado / nuevo grupo -->
+  <div id="modal-root" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog card stack" role="dialog" aria-labelledby="modal-heading">
+      <div class="row" style="justify-content: space-between; align-items: center;">
+        <h2 class="title" id="modal-heading">Nuevo chat</h2>
+        <button type="button" class="btn" id="modal-close" aria-label="Cerrar">✕</button>
+      </div>
+      <input type="search" id="modal-search" placeholder="Buscar por nombre o UID" autocomplete="off" />
+      <div id="modal-options" class="modal-options stack"></div>
+      <div id="modal-group-panel" class="stack modal-group-panel">
+        <label class="muted" style="font-size: 0.8rem">Nombre del grupo</label>
+        <input id="modal-group-name" type="text" placeholder="Nombre del grupo" />
+        <p class="muted small-hint" id="modal-group-hint">Marca uno o más contactos. Puedes añadir nuevos con la primera opción.</p>
+        <button type="button" class="btn btn-primary" id="modal-group-submit">Crear grupo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

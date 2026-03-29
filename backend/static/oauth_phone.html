@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M&amp;M — Completar registro</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .card-narrow { width: 100%; max-width: 420px; }
+    .hint { font-size: 0.85rem; color: var(--c-muted); margin: 0 0 1rem; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <div class="card card-narrow stack">
+    <h1 class="title">Un paso más</h1>
+    <p class="hint">
+      Para usar la misma identidad que el registro por email, necesitamos tu <strong>número de teléfono</strong>.
+      Será tu <strong>ID único</strong> visible para contactos (solo dígitos, sin duplicados).
+    </p>
+    <div id="banner"></div>
+    <label for="phone">Teléfono</label>
+    <input id="phone" type="tel" name="phone" inputmode="numeric" autocomplete="tel" placeholder="Ej: +57 300 1234567" />
+    <button type="button" class="btn btn-primary" id="btnSubmit">Confirmar y entrar</button>
+    <a class="btn" href="/static/auth.html" style="text-align:center;text-decoration:none;display:block;">Cancelar</a>
+  </div>
+  <script>
+    (function () {
+      const q = new URLSearchParams(window.location.search);
+      const pending = q.get("pending");
+      const banner = document.getElementById("banner");
+      const sessionKey = "mm_session";
+
+      if (!pending) {
+        banner.className = "banner error";
+        banner.textContent = "Falta el token de verificación. Vuelve a iniciar sesión con Google.";
+        document.getElementById("btnSubmit").disabled = true;
+        return;
+      }
+
+      function showBanner(text, ok) {
+        banner.className = ok ? "banner ok" : "banner error";
+        banner.textContent = text;
+      }
+
+      async function parseDetail(res, data) {
+        const d = data && data.detail;
+        if (typeof d === "string") return d;
+        if (Array.isArray(d)) return d.map((x) => x.msg || JSON.stringify(x)).join("; ");
+        return res.statusText || "Error " + res.status;
+      }
+
+      document.getElementById("btnSubmit").onclick = async () => {
+        const phone = document.getElementById("phone").value.trim();
+        if (!phone) {
+          showBanner("Introduce tu número de teléfono.", false);
+          return;
+        }
+        try {
+          const r = await fetch("/auth/oauth/complete-phone", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pending_token: pending, phone: phone }),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) {
+            showBanner(await parseDetail(r, data), false);
+            return;
+          }
+          if (data.access_token && data.user && data.user.id) {
+            localStorage.setItem(
+              sessionKey,
+              JSON.stringify({
+                access_token: data.access_token,
+                token_type: data.token_type || "bearer",
+                provider: data.provider || "google",
+                user: data.user,
+              })
+            );
+            showBanner("Listo. Redirigiendo…", true);
+            setTimeout(() => {
+              window.location.href = "/static/app.html";
+            }, 600);
+          }
+        } catch (e) {
+          showBanner(String(e), false);
+        }
+      };
+    })();
+  </script>
+</body>
+</html>
