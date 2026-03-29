@@ -100,14 +100,25 @@ def test_api_auth_register_and_login_persists(client: TestClient):
     suffix = uuid.uuid4().hex[:8]
     email = f"test_{suffix}@example.com"
     password = "password123"
+    phone = "57" + f"{uuid.uuid4().int % 10**10:010d}"
     r = client.post(
         "/auth/register",
-        json={"email": email, "password": password, "full_name": "Test User"},
+        json={
+            "email": email,
+            "password": password,
+            "full_name": "Test User",
+            "phone": phone,
+        },
     )
     assert r.status_code == 200, r.text
     data = r.json()
     assert data["user"]["email"] == email
+    assert data["unique_id"] == phone  # dígitos normalizados = unique_id
     assert "access_token" in data
+
+    prof = client.get(f"/users/{data['user']['id']}")
+    assert prof.status_code == 200, prof.text
+    assert prof.json()["unique_id"] == phone
 
     r2 = client.post(
         "/auth/login",
@@ -115,6 +126,28 @@ def test_api_auth_register_and_login_persists(client: TestClient):
     )
     assert r2.status_code == 200, r2.text
     assert "access_token" in r2.json()
+
+
+def test_api_auth_register_rejects_duplicate_phone(client: TestClient):
+    suffix = uuid.uuid4().hex[:8]
+    phone = "57" + f"{uuid.uuid4().int % 10**10:010d}"
+    body_a = {
+        "email": f"a_{suffix}@example.com",
+        "password": "password123",
+        "full_name": "User A",
+        "phone": phone,
+    }
+    body_b = {
+        "email": f"b_{suffix}@example.com",
+        "password": "password123",
+        "full_name": "User B",
+        "phone": phone,
+    }
+    r1 = client.post("/auth/register", json=body_a)
+    assert r1.status_code == 200, r1.text
+    r2 = client.post("/auth/register", json=body_b)
+    assert r2.status_code == 409, r2.text
+    assert "teléfono" in (r2.json().get("detail") or "").lower()
 
 
 def test_api_notifications_create_and_list(client: TestClient):

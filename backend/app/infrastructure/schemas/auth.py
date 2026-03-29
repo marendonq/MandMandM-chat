@@ -7,6 +7,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=1)
+    phone: str = Field(..., min_length=1, description="Teléfono; se normaliza a dígitos y es el unique_id del perfil.")
 
 
 class LoginRequest(BaseModel):
@@ -32,6 +33,7 @@ class UserSchema(BaseModel):
 class RegisterResponse(BaseModel):
     access_token: str
     user: UserSchema
+    unique_id: str
 
 
 class LoginResponse(BaseModel):

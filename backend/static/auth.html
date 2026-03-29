@@ -6,27 +6,27 @@
   <title>M&amp;M — Entrar</title>
   <style>
     :root {
-      --bg: #0f1419;
-      --card: #1a2332;
-      --border: #2d3a4d;
-      --text: #e7ecf3;
-      --muted: #8b9bb4;
-      --accent: #3d8bfd;
-      --accent-dim: #2a5fad;
-      --warn: #f0b429;
+      --bg: #000000;
+      --card: #1a1a24;
+      --border: #3b2d37;
+      --text: #ffffff;
+      --muted: #e67a6e;
+      --accent: #e627ca;
+      --accent-dim: #e63c28;
+      --warn: #eb7617;
       --radius: 12px;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0; min-height: 100vh;
       font-family: "Segoe UI", system-ui, sans-serif;
-      background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, #e65822 0%, var(--bg) 55%);
       color: var(--text);
       display: flex; align-items: center; justify-content: center;
       padding: 1.5rem;
     }
     .card {
-      width: 100%; max-width: 380px;
+      width: 100%; max-width: 400px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -34,7 +34,7 @@
       box-shadow: 0 24px 48px rgba(0,0,0,.35);
     }
     h1 { font-size: 1.35rem; font-weight: 600; margin: 0 0 .25rem; letter-spacing: -0.02em; }
-    .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 1.5rem; line-height: 1.45; }
+    .subtitle { color: var(--muted); font-size: .875rem; margin: 0 0 1.25rem; line-height: 1.45; }
     .banner {
       display: none; font-size: .8rem; padding: .65rem .75rem; border-radius: 8px;
       margin-bottom: 1rem; line-height: 1.4;
@@ -42,6 +42,7 @@
     .banner.show { display: block; }
     .banner.warn { background: rgba(240, 180, 41, .15); border: 1px solid rgba(240, 180, 41, .35); color: #f5d76e; }
     .banner.info { background: rgba(61, 139, 253, .12); border: 1px solid rgba(61, 139, 253, .3); color: #9ec5ff; }
+    .banner.err { background: rgba(230, 60, 40, .15); border: 1px solid rgba(230, 60, 40, .35); color: #ffb4a8; }
     .section-title {
       font-size: .7rem; text-transform: uppercase; letter-spacing: .12em;
       color: var(--muted); margin: 0 0 .75rem;
@@ -67,6 +68,7 @@
     }
     legend { font-weight: 600; font-size: .85rem; padding: 0 .35rem; }
     label { display: block; font-size: .78rem; color: var(--muted); margin-top: .5rem; }
+    label:first-of-type { margin-top: 0; }
     input {
       width: 100%; margin-top: .2rem; padding: .5rem .6rem; border-radius: 6px;
       border: 1px solid var(--border); background: rgba(0,0,0,.25); color: var(--text); font-size: .9rem;
@@ -78,11 +80,22 @@
       font-weight: 600; font-size: .9rem; cursor: pointer;
     }
     .btn-primary:hover { filter: brightness(1.08); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+    .link-switch {
+      display: block; width: 100%; margin-top: 1.1rem; padding: 0;
+      background: none; border: none; color: var(--muted);
+      font-size: .88rem; text-decoration: underline; text-underline-offset: 3px;
+      cursor: pointer; text-align: center;
+    }
+    .link-switch:hover { color: var(--text); }
+    .panel-register .link-switch { margin-top: 0; margin-bottom: 1rem; text-align: left; }
     pre {
       margin: 1rem 0 0; padding: .65rem; border-radius: 8px; background: rgba(0,0,0,.35);
       border: 1px solid var(--border); font-size: .68rem; overflow: auto;
-      white-space: pre-wrap; word-break: break-all; color: var(--muted); max-height: 160px;
+      white-space: pre-wrap; word-break: break-all; color: var(--muted); max-height: 140px;
     }
+    details { margin-top: 1rem; font-size: .75rem; color: var(--muted); }
+    details summary { cursor: pointer; }
     .hint { font-size: .72rem; color: var(--muted); margin-top: 1rem; line-height: 1.5; }
     .hint code { background: rgba(0,0,0,.35); padding: .1rem .3rem; border-radius: 4px; font-size: .68rem; }
   </style>
@@ -90,79 +103,170 @@
 <body>
   <div class="card">
     <h1>M&amp;M</h1>
-    <p class="subtitle">Inicia sesión o crea una cuenta. También puedes usar un proveedor OAuth.</p>
 
     <div id="banner" class="banner" role="status"></div>
 
-    <p class="section-title">Continuar con OAuth</p>
-    <div class="oauth-grid">
-      <a class="oauth-btn" href="/auth/oauth/google">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-        Google
-      </a>
-      <a class="oauth-btn" href="/auth/oauth/github">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-        GitHub
-      </a>
-      <a class="oauth-btn" href="/auth/oauth/microsoft">
-        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 1h10v10H1V1zm12 0h10v10H13V1zM1 13h10v10H1V13zm12 0h10v10H13V13z"/></svg>
-        Microsoft
-      </a>
-    </div>
+    <!-- Vista inicial: solo Login + OAuth -->
+    <section id="panel-login" class="panel-login" aria-label="Iniciar sesión">
+      <p class="subtitle">Inicia sesión con email o con un proveedor OAuth.</p>
 
-    <div class="divider">o con email y contraseña</div>
+      <p class="section-title">Continuar con OAuth</p>
+      <p class="subtitle" style="margin-top:-0.5rem;font-size:.8rem;">La primera vez con Google te pediremos el teléfono (mismo ID que el registro por email).</p>
+      <div class="oauth-grid">
+        <a class="oauth-btn" href="/auth/oauth/google">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </a>
+        <a class="oauth-btn" href="/auth/oauth/github">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a class="oauth-btn" href="/auth/oauth/microsoft">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 1h10v10H1V1zm12 0h10v10H13V1zM1 13h10v10H1V13zm12 0h10v10H13V13z"/></svg>
+          Microsoft
+        </a>
+      </div>
 
-    <fieldset>
-      <legend>Registro</legend>
-      <label>Email <input type="email" id="reg_email" autocomplete="email" /></label>
-      <label>Contraseña (mín. 8) <input type="password" id="reg_password" autocomplete="new-password" /></label>
-      <label>Nombre <input type="text" id="reg_name" autocomplete="name" /></label>
-      <button type="button" class="btn-primary" id="btn_reg">Crear cuenta</button>
-    </fieldset>
+      <div class="divider">o inicia sesión con email</div>
 
-    <fieldset>
-      <legend>Login</legend>
-      <label>Email <input type="email" id="log_email" autocomplete="email" /></label>
-      <label>Contraseña <input type="password" id="log_password" autocomplete="current-password" /></label>
-      <button type="button" class="btn-primary" id="btn_log">Entrar</button>
-    </fieldset>
+      <fieldset>
+        <legend>Log in</legend>
+        <label>Email <input type="email" id="log_email" name="email" autocomplete="email" /></label>
+        <label>Contraseña <input type="password" id="log_password" name="password" autocomplete="current-password" /></label>
+        <button type="button" class="btn-primary" id="btn_log">Entrar</button>
+      </fieldset>
 
-    <p class="section-title">Respuesta API</p>
-    <pre id="out">—</pre>
+      <button type="button" class="link-switch" id="btn_show_register">¿No tienes una cuenta aún?</button>
+    </section>
+
+    <!-- Registro: oculto hasta pulsar el enlace anterior -->
+    <section id="panel-register" class="panel-register" hidden aria-label="Registro">
+      <p class="subtitle">Crea una cuenta con email y contraseña (mín. 8 caracteres).</p>
+
+      <button type="button" class="link-switch" id="btn_show_login">¿Ya tienes cuenta? Inicia sesión</button>
+
+      <fieldset>
+        <legend>Registro</legend>
+        <label>Teléfono <input type="tel" id="reg_phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="Ej: +57 300 1234567 (será tu ID único)" /></label>
+        <label>Email <input type="email" id="reg_email" name="reg_email" autocomplete="email" /></label>
+        <label>Contraseña (mín. 8) <input type="password" id="reg_password" name="reg_password" autocomplete="new-password" /></label>
+        <label>Nombre completo <input type="text" id="reg_name" name="name" autocomplete="name" /></label>
+        <button type="button" class="btn-primary" id="btn_reg">Crear cuenta</button>
+      </fieldset>
+    </section>
+
+    <details>
+      <summary>Última respuesta API (depuración)</summary>
+      <pre id="out">—</pre>
+    </details>
 
     <p class="hint">
-      OAuth: define <code>OAUTH_GOOGLE_CLIENT_ID</code>, <code>OAUTH_GITHUB_CLIENT_ID</code> o <code>OAUTH_MICROSOFT_CLIENT_ID</code>
-      y registra la URL de callback <code>/auth/oauth/callback/&lt;proveedor&gt;</code> en el panel del proveedor.
-      Ajusta <code>OAUTH_PUBLIC_BASE_URL</code> si el backend no está en <code>http://127.0.0.1:8000</code>.
+      OAuth: define las variables de cliente en el servidor y registra el callback
+      <code>/auth/oauth/callback/&lt;proveedor&gt;</code>. Ajusta <code>OAUTH_PUBLIC_BASE_URL</code> si hace falta.
     </p>
   </div>
 
   <script>
     const out = document.getElementById('out');
     const banner = document.getElementById('banner');
+    const sessionKey = 'mm_session';
+    const panelLogin = document.getElementById('panel-login');
+    const panelRegister = document.getElementById('panel-register');
+
     function show(obj) {
       out.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
     }
+
+    function saveSession(session) {
+      localStorage.setItem(sessionKey, JSON.stringify(session));
+    }
+
+    function decodeJwtSub(token) {
+      try {
+        const payload = token.split('.')[1];
+        const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const json = decodeURIComponent(escape(atob(b64)));
+        const obj = JSON.parse(json);
+        return obj.sub || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function showBanner(text, kind) {
+      banner.textContent = text;
+      banner.className = 'banner show ' + (kind || 'info');
+    }
+
+    function clearBanner() {
+      banner.className = 'banner';
+      banner.textContent = '';
+    }
+
+    function goAppSoon() {
+      setTimeout(() => {
+        window.location.href = '/static/app.html';
+      }, 700);
+    }
+
+    function showLoginPanel() {
+      panelRegister.hidden = true;
+      panelLogin.hidden = false;
+      clearBanner();
+    }
+
+    function showRegisterPanel() {
+      panelLogin.hidden = true;
+      panelRegister.hidden = false;
+      clearBanner();
+    }
+
+    document.getElementById('btn_show_register').onclick = () => {
+      showRegisterPanel();
+      document.getElementById('reg_email').focus();
+    };
+
+    document.getElementById('btn_show_login').onclick = () => {
+      showLoginPanel();
+      document.getElementById('log_email').focus();
+    };
 
     (function readQuery() {
       const q = new URLSearchParams(window.location.search);
       const oauth = q.get('oauth');
       const idp = q.get('idp') || 'proveedor';
       if (oauth === 'missing') {
-        banner.textContent = 'OAuth (' + idp + '): falta CLIENT_ID en el servidor. Configura la variable de entorno correspondiente y vuelve a intentar.';
-        banner.className = 'banner show warn';
+        showBanner('OAuth (' + idp + '): falta CLIENT_ID o CLIENT_SECRET en el servidor.', 'warn');
       } else if (oauth === 'unknown') {
-        banner.textContent = 'Proveedor OAuth no soportado: ' + idp + '. Usa google, github o microsoft.';
-        banner.className = 'banner show warn';
+        showBanner('Proveedor OAuth no soportado: ' + idp + '.', 'warn');
+      } else if (oauth === 'failed') {
+        showBanner('La autenticación OAuth falló. Intenta nuevamente.', 'warn');
+      } else if (oauth === 'need_login') {
+        showBanner('Debes iniciar sesión para continuar.', 'info');
+      }
+      if (q.get('register') === '1') {
+        showRegisterPanel();
       }
     })();
 
+    async function parseError(res, data) {
+      const detail = data && data.detail;
+      if (typeof detail === 'string') return detail;
+      if (Array.isArray(detail)) return detail.map((d) => d.msg || JSON.stringify(d)).join('; ');
+      return res.statusText || 'Error ' + res.status;
+    }
+
     document.getElementById('btn_reg').onclick = async () => {
       const body = {
+        phone: document.getElementById('reg_phone').value.trim(),
         email: document.getElementById('reg_email').value.trim(),
         password: document.getElementById('reg_password').value,
         full_name: document.getElementById('reg_name').value.trim(),
       };
+      if (!body.phone || !body.email || !body.password || !body.full_name) {
+        showBanner('Completa teléfono, email, contraseña y nombre.', 'err');
+        return;
+      }
       try {
         const r = await fetch('/auth/register', {
           method: 'POST',
@@ -171,7 +275,27 @@
         });
         const data = await r.json().catch(() => ({}));
         show({ status: r.status, ...data });
-      } catch (e) { show(String(e)); }
+        if (r.ok && data.access_token && data.user && data.user.id) {
+          saveSession({
+            access_token: data.access_token,
+            token_type: 'bearer',
+            provider: 'password',
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              full_name: data.user.full_name,
+              unique_id: data.unique_id,
+            },
+          });
+          showBanner('Cuenta creada. Redirigiendo…', 'info');
+          goAppSoon();
+        } else {
+          showBanner(await parseError(r, data), 'err');
+        }
+      } catch (e) {
+        show(String(e));
+        showBanner(String(e), 'err');
+      }
     };
 
     document.getElementById('btn_log').onclick = async () => {
@@ -179,6 +303,10 @@
         email: document.getElementById('log_email').value.trim(),
         password: document.getElementById('log_password').value,
       };
+      if (!body.email || !body.password) {
+        showBanner('Introduce email y contraseña.', 'err');
+        return;
+      }
       try {
         const r = await fetch('/auth/login', {
           method: 'POST',
@@ -187,7 +315,27 @@
         });
         const data = await r.json().catch(() => ({}));
         show({ status: r.status, ...data });
-      } catch (e) { show(String(e)); }
+        if (r.ok && data.access_token) {
+          const userId = decodeJwtSub(data.access_token);
+          saveSession({
+            access_token: data.access_token,
+            token_type: 'bearer',
+            provider: 'password',
+            user: {
+              id: userId,
+              email: body.email,
+              full_name: body.email,
+            },
+          });
+          showBanner('Sesión iniciada. Redirigiendo…', 'info');
+          goAppSoon();
+        } else {
+          showBanner(await parseError(r, data), 'err');
+        }
+      } catch (e) {
+        show(String(e));
+        showBanner(String(e), 'err');
+      }
     };
   </script>
 </body>

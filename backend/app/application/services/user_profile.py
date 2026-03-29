@@ -1,5 +1,9 @@
-﻿from dataclasses import replace
-from app.domain.entities.user_profile import UserProfileEntityFactory
+from dataclasses import replace
+
+from sqlalchemy.exc import IntegrityError
+
+from app.application.validators.auth import AuthValidator
+from app.domain.entities.user_profile import UserProfileEntity, UserProfileEntityFactory
 from app.domain.repositories.user_profile import UserProfileRepository
 from app.domain.repositories.conversation import ConversationRepository
 from app.domain.use_cases.user_profile import UserProfileUseCases
@@ -8,6 +12,8 @@ from app.domain.exceptions import (
     ContactAlreadyExists,
     ContactNotFound,
     CannotAddSelfContact,
+    PhoneNumberAlreadyInUse,
+    OAuthAccountAlreadyRegistered,
 )
 
 
@@ -16,6 +22,9 @@ class UserProfileService(UserProfileUseCases):
         self.user_profile_repository = user_profile_repository
         self.conversation_repository = conversation_repository
 
+    def find_oauth_profile(self, provider: str, subject: str) -> UserProfileEntity | None:
+        return self.user_profile_repository.get_by_oauth(provider, subject)
+
     def upsert_oauth_profile(self, provider: str, subject: str, email: str, full_name: str, picture: str | None = None):
         existing = self.user_profile_repository.get_by_oauth(provider, subject)
         if existing is not None:
@@ -23,6 +32,32 @@ class UserProfileService(UserProfileUseCases):
             return self.user_profile_repository.update(updated)
         profile = UserProfileEntityFactory.create(provider, subject, email, full_name, picture)
         return self.user_profile_repository.add(profile)
+
+    def complete_oauth_profile_with_phone(self, claims: dict, phone_raw: str) -> UserProfileEntity:
+        """
+        Crea el perfil OAuth la primera vez usando el teléfono como unique_id.
+        `claims` proviene de un JWT firmado (oauth_phone_pending).
+        """
+        if claims.get("typ") != "oauth_phone_pending":
+            raise ValueError("invalid_oauth_pending_token")
+        provider = claims.get("provider") or ""
+        oauth_sub = str(claims.get("oauth_sub") or "")
+        email = claims.get("email") or ""
+        full_name = claims.get("full_name") or ""
+        picture = claims.get("picture")
+
+        if self.user_profile_repository.get_by_oauth(provider, oauth_sub) is not None:
+            raise OAuthAccountAlreadyRegistered()
+        phone_uid = AuthValidator.normalize_phone(phone_raw)
+        if self.user_profile_repository.get_by_unique_id(phone_uid) is not None:
+            raise PhoneNumberAlreadyInUse()
+        profile = UserProfileEntityFactory.create_oauth_with_phone(
+            phone_uid, provider, oauth_sub, email, full_name, picture
+        )
+        try:
+            return self.user_profile_repository.add(profile)
+        except IntegrityError:
+            raise PhoneNumberAlreadyInUse()
 
     def get_profile(self, profile_id: str):
         profile = self.user_profile_repository.get_by_id(profile_id)

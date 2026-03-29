@@ -1,4 +1,4 @@
-from app.domain.exceptions import InvalidEmail, InvalidPassword
+from app.domain.exceptions import InvalidEmail, InvalidPassword, InvalidPhoneNumber
 
 
 class AuthValidator:
@@ -23,3 +23,13 @@ class AuthValidator:
     def validate_full_name(cls, full_name: str) -> None:
         if not full_name or not full_name.strip():
             raise ValueError("full_name is required")
+
+    @classmethod
+    def normalize_phone(cls, raw: str) -> str:
+        """Solo dígitos; mínimo 8, máximo 20 (ajustable). Se guarda como unique_id público."""
+        if not raw or not isinstance(raw, str):
+            raise InvalidPhoneNumber()
+        digits = "".join(c for c in raw.strip() if c.isdigit())
+        if len(digits) < 8 or len(digits) > 20:
+            raise InvalidPhoneNumber()
+        return digits[:64]

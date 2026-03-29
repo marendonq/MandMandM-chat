@@ -104,7 +104,13 @@ class Container(containers.DeclarativeContainer):
     auth_token_port = providers.Singleton(JwtAuthTokenAdapter)
     password_port = providers.Singleton(BcryptPasswordAdapter)
 
-    auth_service = providers.Factory(AuthService, user_repository, auth_token_port, password_port)
+    auth_service = providers.Factory(
+        AuthService,
+        user_repository,
+        user_profile_repository,
+        auth_token_port,
+        password_port,
+    )
     notification_service = providers.Factory(NotificationService, notification_repository)
     conversation_service = providers.Factory(
         ConversationService,

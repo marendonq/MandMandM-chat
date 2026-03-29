@@ -2,8 +2,8 @@
 # Uso (desde la raíz del repo MandMandM):  docker compose up -d
 # Parar:  docker compose down   (los datos siguen en el volumen)
 #
-# Si el puerto 5432 ya lo usa PostgreSQL en Windows, cambia "5432:5432" por "5433:5432"
-# y en backend/.env usa el puerto 5433 en DATABASE_URL.
+# PostgreSQL expuesto en el host en 5432. Si otro contenedor/servicio usa 5432,
+# detén ese proceso o vuelve a mapear aquí (p. ej. "5433:5432") y ajusta DATABASE_URL.
 #
 # MongoDB: conversaciones y mensajes (MONGO_URI / MONGO_DB_NAME en backend/.env).
 

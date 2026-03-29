@@ -1,4 +1,4 @@
-﻿from copy import copy
+from copy import copy
 from app.domain.entities.user import UserEntity
 from app.domain.repositories.user import UserRepository
 
@@ -24,6 +24,9 @@ class UserInMemoryRepository(UserRepository):
         }
         self._store.append(copy(row))
         return user
+
+    def delete_by_id(self, user_id: str) -> None:
+        self._store = [r for r in self._store if r.get("id") != user_id]
 
     @staticmethod
     def _row_to_entity(row: dict) -> UserEntity:

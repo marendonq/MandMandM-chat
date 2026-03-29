@@ -14,6 +14,8 @@ from app.domain.exceptions import (
     InvalidCredentials,
     InvalidEmail,
     InvalidPassword,
+    PhoneNumberAlreadyInUse,
+    InvalidPhoneNumber,
 )
 
 router = APIRouter(
@@ -39,17 +41,29 @@ def register(
     auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ) -> RegisterResponse:
     try:
-        access_token, user = auth_service.register(
+        access_token, user, profile = auth_service.register(
             email=body.email,
             password=body.password,
             full_name=body.full_name,
+            phone=body.phone,
         )
         return RegisterResponse(
             access_token=access_token,
             user=_user_entity_to_schema(user),
+            unique_id=profile.unique_id,
         )
     except UserAlreadyExists:
         raise HTTPException(status_code=409, detail="A user with this email already exists")
+    except PhoneNumberAlreadyInUse:
+        raise HTTPException(
+            status_code=409,
+            detail="Este número de teléfono ya está en uso. Verifica el número o inicia sesión si ya tienes cuenta.",
+        )
+    except InvalidPhoneNumber:
+        raise HTTPException(
+            status_code=400,
+            detail="Número de teléfono no válido. Ingresa al menos 8 dígitos (puedes incluir espacios o +).",
+        )
     except (InvalidEmail, InvalidPassword) as e:
         raise HTTPException(status_code=400, detail=str(e))
 
