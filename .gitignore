@@ -1,7 +1,6 @@
 venv/
 __pycache__/
 *.pyc
-.env
 .venv/
 
 # Credenciales OAuth locales (PowerShell, sin dotenv)
