@@ -21,3 +21,7 @@ container.wire(modules=[
     'app.infrastructure.handlers.auth',
     'app.infrastructure.handlers.oauth_redirect',
 ])
+
+@app.get('/health')
+async def health():
+    return {'status': 'ok'}

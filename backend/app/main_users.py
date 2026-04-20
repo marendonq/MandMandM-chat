@@ -22,3 +22,7 @@ container.wire(modules=[
     'app.infrastructure.handlers.users',
     'app.infrastructure.handlers.presence',
 ])
+
+@app.get('/health')
+async def health():
+    return {'status': 'ok'}

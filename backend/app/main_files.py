@@ -22,3 +22,7 @@ container.wire(modules=[
     'app.infrastructure.handlers.file',
     'app.infrastructure.handlers.files',
 ])
+
+@app.get('/health')
+async def health():
+    return {'status': 'ok'}

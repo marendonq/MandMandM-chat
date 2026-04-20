@@ -16,3 +16,7 @@ container = Container()
 app.container = container
 app.include_router(messages.router)
 container.wire(modules=['app.infrastructure.handlers.messages'])
+
+@app.get('/health')
+async def health():
+    return {'status': 'ok'}
