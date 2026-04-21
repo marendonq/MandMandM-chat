@@ -4,9 +4,15 @@ from pathlib import Path
 from app.infrastructure.database.session import configure_database_from_env
 from app.infrastructure.container import Container
 from app.infrastructure.handlers import conversations
+from fastapi.responses import HTMLResponse
 
 load_dotenv(Path(__file__).parent.parent / '.env')
 configure_database_from_env()
+
+
+@app.get('/health', response_class=HTMLResponse)
+async def health():
+    return '<html><body>OK</body></html>'
 
 app = FastAPI(title='Groups Service', version='1.0')
 container = Container()
@@ -14,6 +20,3 @@ app.container = container
 app.include_router(conversations.router)
 container.wire(modules=['app.infrastructure.handlers.conversations'])
 
-@app.get('/health')
-async def health():
-    return {'status': 'ok'}
