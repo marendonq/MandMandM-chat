@@ -5,10 +5,29 @@ Multicast messages module
 
 | Comando | Rutas | Uso |
 |---------|--------|-----|
-| `uvicorn app.main:app --reload` (desde `backend/`) | `/` → login/registro, `/auth/*`, `/notifications/*` | App monolítica recomendada |
+| `uvicorn app.main:app --reload` (desde `backend/`) | `/` → redirección al frontend, `/auth/*`, `/notifications/*` | API/backend recomendado |
 | `uvicorn app.infrastructure.fast_api:create_app --factory --reload` | `/` → login/registro, `/auth/*` | Solo autenticación (hexagonal) |
+| `uvicorn server:app --reload --port 3000` (desde `frontend/`) | `/` → login/registro UI, `/static/*` | Frontend separado |
+| `docker compose up frontend` | `http://127.0.0.1:3000/` | Frontend en contenedor |
 
-Abrir **http://127.0.0.1:8000/** redirige a la vista de registro/login + OAuth en `/static/auth.html`.
+Abrir **http://127.0.0.1:3000/** carga el frontend y este consume la API del backend.
+Abrir **http://127.0.0.1:8000/** redirige al frontend configurado en `FRONTEND_PUBLIC_BASE_URL`.
+
+### Variables frontend/backend
+
+| Variable | Uso |
+|----------|-----|
+| `FRONTEND_PUBLIC_BASE_URL` | URL pública del frontend separado. Por defecto `http://127.0.0.1:3000`. El backend la usa para redirecciones OAuth y `/`. |
+| `FRONTEND_API_BASE_URL` | URL de la API que consume el frontend. Por defecto `http://127.0.0.1:8000`. Se expone en `/static/config.js`. |
+| `CORS_ALLOW_ORIGINS` | Lista separada por comas de orígenes permitidos para CORS. Si no se define, incluye `FRONTEND_PUBLIC_BASE_URL`, `127.0.0.1:3000/3001` y `localhost:3000/3001`. |
+
+Para Docker, el servicio `frontend` toma estas variables desde el entorno o usa los valores locales por defecto:
+
+```bash
+FRONTEND_PUBLIC_BASE_URL=http://127.0.0.1:3000 \
+FRONTEND_API_BASE_URL=http://127.0.0.1:8000 \
+docker compose up frontend
+```
 
 ### OAuth (opcional)
 

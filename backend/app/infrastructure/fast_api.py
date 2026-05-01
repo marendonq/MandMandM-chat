@@ -4,11 +4,28 @@ import logging
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.infrastructure.container import Container
 from app.infrastructure.database.session import configure_database_from_env
 from app.infrastructure.handlers import Handlers
 from app.infrastructure.public_ui import mount_public_ui
+
+
+def _cors_origins() -> list[str]:
+    raw = os.getenv("CORS_ALLOW_ORIGINS", "").strip()
+    if raw:
+        return [item.strip() for item in raw.split(",") if item.strip()]
+
+    frontend_url = os.getenv("FRONTEND_PUBLIC_BASE_URL", "http://127.0.0.1:3000").rstrip("/")
+    defaults = {
+        frontend_url,
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://localhost:3000",
+        "http://localhost:3001",
+    }
+    return sorted(defaults)
 
 
 def create_app():
@@ -35,6 +52,13 @@ def create_app():
         logging.warning("No se pudo cargar .env desde %s", dotenv_path)
     configure_database_from_env()
     fast_api = FastAPI()
+    fast_api.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins(),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     container = Container()
     fast_api.container = container
     for handler in Handlers.iterator():

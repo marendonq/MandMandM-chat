@@ -1,10 +1,13 @@
 (function () {
   const sessionKey = "mm_session";
   const messageStoreKey = "mm_fake_messages";
+  const apiBaseUrl = (window.MM_CONFIG && window.MM_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000";
 
   const qs = (id) => document.getElementById(id);
   const banner = qs("banner");
   const sessionInfo = qs("sessionInfo");
+  const profileName = qs("profileName");
+  const profileAvatar = qs("profileAvatar");
   const contactsList = qs("contactsList");
   const conversationList = qs("conversationList");
   const notifList = qs("notifList");
@@ -15,19 +18,21 @@
 
   const btnSendMessage = qs("btnSendMessage");
   const btnDeleteConversation = qs("btnDeleteConversation");
+  const btnCopyUID = qs("btnCopyUID");
+  const confirmRoot = qs("confirm-root");
+  const confirmClose = qs("confirm-close");
+  const confirmCancel = qs("confirm-cancel");
+  const confirmDeleteAccount = qs("confirm-delete-account");
 
   let session = null;
   let profile = null;
   let contactsById = new Map();
-  /** Perfiles del interlocutor en chats privados cuando no está en contactos (cache). */
   let peerProfilesById = new Map();
   let conversations = [];
   let activeConversation = null;
-  /** Sondeo de recibos (entregado/leído) mientras hay conversación activa. */
   let receiptPollTimer = null;
   const RECEIPT_POLL_MS = 2500;
 
-  /** modal: 'private' | 'group' */
   let modalMode = "private";
   const groupSelectedIds = new Set();
 
@@ -66,9 +71,13 @@
     localStorage.setItem(messageStoreKey, JSON.stringify(db));
   }
 
+  function apiUrl(path) {
+    return `${apiBaseUrl}${path}`;
+  }
+
   async function api(path, opts = {}) {
     const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
-    const res = await fetch(path, { ...opts, headers });
+    const res = await fetch(apiUrl(path), { ...opts, headers });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
       const msg = body.detail || JSON.stringify(body) || `HTTP ${res.status}`;
@@ -102,11 +111,6 @@
     });
   }
 
-  /**
-   * Estado en servidor para un mensaje del almacén local.
-   * - Entrantes (yo soy destinatario): recibo con recipient_id = yo.
-   * - Salientes (yo soy emisor): recibo del otro (recipient_id = destinatario del mensaje).
-   */
   function receiptStatusFromServerPayload(m, data, uid) {
     const receipts = data.receipts || [];
     if (m.recipient_id === uid) {
@@ -130,18 +134,15 @@
       try {
         const data = await api(`/presence/messages/${encodeURIComponent(m.message_id)}`);
         const next = receiptStatusFromServerPayload(m, data, uid);
-        if (next && next !== (m.status || "SENT")) {
+        if (next && receiptStatusRank(next) > receiptStatusRank(m.status || "SENT")) {
           m.status = next;
           changed = true;
         }
-      } catch (_) {
-        /* sin recibo o error puntual */
-      }
+      } catch (_) {}
     }
     if (changed) saveFakeMessages(db);
   }
 
-  /** Alinea estado local con el servidor (entrantes y salientes). */
   async function syncReceiptStatusFromServerForAllMessages() {
     const db = readFakeMessages();
     let changed = false;
@@ -152,13 +153,11 @@
         try {
           const data = await api(`/presence/messages/${encodeURIComponent(m.message_id)}`);
           const next = receiptStatusFromServerPayload(m, data, uid);
-          if (next && next !== (m.status || "SENT")) {
+          if (next && receiptStatusRank(next) > receiptStatusRank(m.status || "SENT")) {
             m.status = next;
             changed = true;
           }
-        } catch (_) {
-          /* mensaje sin recibo aún o error puntual */
-        }
+        } catch (_) {}
       }
     }
     if (changed) saveFakeMessages(db);
@@ -191,9 +190,13 @@
     return "Enviado";
   }
 
-  /**
-   * Al entrar a la app: marcar DELIVERED todos los mensajes entrantes que sigan en SENT.
-   */
+  function receiptStatusRank(st) {
+    const s = st || "SENT";
+    if (s === "READ") return 3;
+    if (s === "DELIVERED") return 2;
+    return 1;
+  }
+
   async function autoDeliverAllIncomingMessages() {
     const db = readFakeMessages();
     let changed = false;
@@ -216,9 +219,6 @@
     if (changed) saveFakeMessages(db);
   }
 
-  /**
-   * Al abrir un chat: marcar READ los mensajes entrantes (DELIVERED o SENT previo).
-   */
   async function markConversationMessagesRead(convId) {
     const db = readFakeMessages();
     const list = db[convId] || [];
@@ -275,11 +275,23 @@
 
   function renderSession() {
     const user = session.user;
-    sessionInfo.innerHTML = `
-      <div><strong>${user.full_name || "Usuario"}</strong></div>
-      <div class="muted">${user.email || ""}</div>
-      <div class="muted">UID: ${user.unique_id || "—"}</div>
-    `;
+    const name = user.full_name || user.email || "Usuario";
+    if (profileName) profileName.textContent = name;
+    
+    // Obtener iniciales: primera letra de cada palabra, max 2
+    const initials = name
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((word) => word.length > 0)
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase() || "US";
+
+    if (profileAvatar) profileAvatar.textContent = initials;
+
+    if (btnCopyUID && user.unique_id) {
+      btnCopyUID.hidden = false;
+    }
   }
 
   async function loadProfile() {
@@ -308,13 +320,11 @@
     contactsList.innerHTML = ids
       .map((id) => {
         const c = contactsById.get(id) || { id };
-        const uid = c.unique_id ? `<div class="muted">UID: ${c.unique_id}</div>` : "";
         return `<div class="item">
           <div><strong>${c.full_name || "Contacto"}</strong></div>
-          <div class="muted">${c.email || ""}</div>
-          ${uid}
-          <div class="row" style="margin-top:8px;">
-            <button class="btn btn-danger" data-del-contact="${id}">Eliminar</button>
+          <div class="meta">Disponible para iniciar chat</div>
+          <div class="row item-actions">
+            <button class="btn btn-danger btn-small" data-del-contact="${id}">Eliminar</button>
           </div>
         </div>`;
       })
@@ -378,14 +388,14 @@
     if (modalMode === "private") {
       primaryHtml = `
         <button type="button" class="modal-option-primary" id="modal-primary-add" ${uidReady ? "" : "disabled"}>
-          <strong>➕ Añadir contacto</strong><br />
-          <span class="muted" style="font-size:0.8rem">Usa el UID en la barra de búsqueda y pulsa aquí para añadirlo y abrir el chat.</span>
+          <strong>+ Añadir contacto</strong><br />
+          <span class="meta">Usa el UID en la barra de búsqueda para añadirlo y abrir el chat.</span>
         </button>`;
     } else {
       primaryHtml = `
         <button type="button" class="modal-option-primary" id="modal-primary-add" ${uidReady ? "" : "disabled"}>
-          <strong>➕ Añadir contacto</strong><br />
-          <span class="muted" style="font-size:0.8rem">Escribe un UID arriba y pulsa para añadirlo a tus contactos (luego puedes marcarlo para el grupo).</span>
+          <strong>+ Añadir contacto</strong><br />
+          <span class="meta">Escribe un UID arriba para añadirlo a tus contactos y marcarlo para el grupo.</span>
         </button>`;
     }
 
@@ -569,7 +579,6 @@
     return members.find((m) => m !== myId) || null;
   }
 
-  /** Título visible: grupo = nombre del grupo; privado = nombre del otro usuario. */
   function conversationDisplayName(c) {
     if (!c) return "";
     if (c.type === "group") {
@@ -626,11 +635,11 @@
         const badge = unread > 0 ? `<span class="unread-badge" title="Sin leer">${unread}</span>` : "";
         const title = escapeHtml(conversationDisplayName(c));
         return `<div class="item ${active}${unreadClass}" data-conversation="${c.id}">
-          <div class="row conv-head" style="justify-content:space-between;align-items:flex-start;">
+          <div class="row conv-head">
             <strong>${title}</strong>
             ${badge}
           </div>
-          <div class="muted">${t} · Miembros: ${membersCount}</div>
+          <div class="meta">${t} · Miembros: ${membersCount}</div>
         </div>`;
       })
       .join("");
@@ -643,9 +652,9 @@
           .map(
             (n) => `<div class="item">
               <div><strong>${n.type}</strong></div>
-              <div class="muted">${n.content}</div>
-              <div class="row" style="margin-top:8px;">
-                <button class="btn" data-read-notif="${n.id}">Marcar leida</button>
+              <div class="meta">${n.content}</div>
+              <div class="row item-actions">
+                <button class="btn btn-small" data-read-notif="${n.id}">Marcar leída</button>
               </div>
             </div>`,
           )
@@ -674,19 +683,27 @@
 
   function renderMessages() {
     if (!activeConversation) {
-      messageArea.className = "message-area muted";
-      messageArea.textContent = "No hay conversación activa.";
+      messageArea.className = "message-area muted flex-grow";
+      messageArea.innerHTML = `<div class="empty-state">
+        <div class="empty-mark">MM</div>
+        <strong>Selecciona una conversación</strong>
+        <span>Cuando abras un chat, los mensajes aparecerán aquí.</span>
+      </div>`;
       return;
     }
     const db = readFakeMessages();
     const list = db[activeConversation.id] || [];
     if (!list.length) {
-      messageArea.className = "message-area muted";
-      messageArea.textContent = "Sin mensajes aún.";
+      messageArea.className = "message-area muted flex-grow";
+      messageArea.innerHTML = `<div class="empty-state">
+        <div class="empty-mark">...</div>
+        <strong>Sin mensajes aún</strong>
+        <span>Escribe abajo para empezar la conversación.</span>
+      </div>`;
       return;
     }
     const uid = String(session.user.id || "").trim().toLowerCase();
-    messageArea.className = "message-area";
+    messageArea.className = "message-area flex-grow";
     messageArea.innerHTML = list
       .map((m) => {
         const out = String(m.sender_id || "").trim().toLowerCase() === uid;
@@ -698,7 +715,7 @@
         return `<div class="${rowClass}">
           <div class="${bubbleClass}">
           <div>${m.content || "(sin contenido)"}</div>
-          <div class="muted msg-status" style="font-size:.75rem;margin-top:6px;" data-msg-status="${st}">
+          <div class="muted msg-status" data-msg-status="${st}">
             ${meta}
           </div>
           </div>
@@ -804,9 +821,20 @@
     showBanner("Notificación marcada como leída.");
   }
 
+  function openDeleteAccountConfirm() {
+    confirmRoot.classList.add("is-open");
+    confirmRoot.setAttribute("aria-hidden", "false");
+    confirmDeleteAccount.focus();
+  }
+
+  function closeDeleteAccountConfirm() {
+    confirmRoot.classList.remove("is-open");
+    confirmRoot.setAttribute("aria-hidden", "true");
+  }
+
   async function deleteAccount() {
-    if (!confirm("Esto elimina tu perfil y limpia vínculos. ¿Continuar?")) return;
     await api(`/users/${session.user.id}`, { method: "DELETE" });
+    closeDeleteAccountConfirm();
     clearSession();
     showBanner("Cuenta eliminada. Redirigiendo...");
     setTimeout(() => {
@@ -838,6 +866,17 @@
       clearSession();
       window.location.href = "/static/auth.html";
     };
+    if (btnCopyUID) {
+      btnCopyUID.onclick = async () => {
+        if (!session || !session.user || !session.user.unique_id) return;
+        try {
+          await navigator.clipboard.writeText(session.user.unique_id);
+          showBanner("UID copiado al portapapeles.");
+        } catch (err) {
+          showBanner("Tu UID es: " + session.user.unique_id);
+        }
+      };
+    }
     qs("btnRefreshAll").onclick = async () => {
       try {
         await fullRefresh();
@@ -862,6 +901,7 @@
     };
     document.addEventListener("keydown", (ev) => {
       if (ev.key === "Escape" && qs("modal-root").classList.contains("is-open")) closeModal();
+      if (ev.key === "Escape" && confirmRoot.classList.contains("is-open")) closeDeleteAccountConfirm();
     });
     document.addEventListener("visibilitychange", async () => {
       if (document.visibilityState !== "visible" || !activeConversation) return;
@@ -892,13 +932,19 @@
       }
     };
     qs("btnLoadNotif").onclick = loadNotifications;
-    qs("btnDeleteAccount").onclick = async () => {
+    confirmClose.onclick = closeDeleteAccountConfirm;
+    confirmCancel.onclick = closeDeleteAccountConfirm;
+    confirmRoot.onclick = (ev) => {
+      if (ev.target === confirmRoot) closeDeleteAccountConfirm();
+    };
+    confirmDeleteAccount.onclick = async () => {
       try {
         await deleteAccount();
       } catch (e) {
         showBanner(String(e.message || e), false);
       }
     };
+    qs("btnDeleteAccount").onclick = openDeleteAccountConfirm;
 
     contactsList.onclick = async (ev) => {
       const btn = ev.target.closest("[data-del-contact]");
@@ -931,11 +977,12 @@
 
   async function init() {
     if (!requireAuth()) return;
+    renderSession(); // <-- Mostrar el nombre del localStorage inmediatamente
     bindEvents();
     try {
       await fullRefresh();
       showBanner(
-        "Conectado. Los estados de tus mensajes (Enviado → Entregado → Leído) se actualizan solos cada pocos segundos con el chat abierto.",
+        "Conectado. Los estados de tus mensajes (Enviado -> Entregado -> Leído) se actualizan solos cada pocos segundos con el chat abierto.",
       );
     } catch (e) {
       showBanner(String(e.message || e), false);

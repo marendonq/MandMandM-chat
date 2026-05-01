@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M&M Chat</title>
+  <link rel="stylesheet" href="/static/styles.css?v=10" />
+</head>
+<body>
+  <div class="layout layout-three">
+    <!-- Left Column -->
+    <aside class="col col-left flex-col">
+      <div class="topbar border-bottom row-space-between">
+        <div class="brand-lockup">
+          <span class="brand-dot"></span>
+          <h1 class="title">M&amp;M Chat</h1>
+        </div>
+        <button id="btnLogout" class="btn btn-ghost">Salir</button>
+      </div>
+
+      <div class="profile-section border-bottom row">
+        <div id="profileAvatar" class="avatar avatar-lg">TU</div>
+        <div class="profile-copy flex-col">
+          <strong id="profileName">Cargando...</strong>
+          <span id="sessionInfo" hidden></span>
+          <div class="profile-status">
+            <span class="status-dot"></span>
+            <span class="muted">En línea</span>
+            <button id="btnCopyUID" class="btn btn-chip" hidden title="Copiar tu UID">UID</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-section border-bottom">
+        <input type="text" class="search-input" placeholder="Buscar contactos..." />
+      </div>
+
+      <div class="contacts-section flex-grow flex-col">
+        <h3 class="section-title">Mensajes recientes</h3>
+        <div id="contactsList" class="contacts-list flex-grow"></div>
+      </div>
+
+      <div class="sidebar-footer border-top">
+        <button id="btnDeleteAccount" class="btn btn-danger btn-full">Eliminar cuenta</button>
+      </div>
+    </aside>
+
+    <!-- Center Column -->
+    <main class="col col-center flex-col">
+      <div id="banner"></div>
+
+      <div class="chat-header border-bottom row-space-between">
+        <div class="chat-identity row">
+          <div class="avatar">MM</div>
+          <div class="chat-title-group">
+            <h2 id="chatTitle" class="title">Selecciona una conversación</h2>
+            <span id="presencePill" class="pill offline">offline</span>
+          </div>
+        </div>
+        <button id="btnDeleteConversation" class="btn btn-danger-soft" disabled>Eliminar chat</button>
+      </div>
+
+      <div id="messageArea" class="message-area muted flex-grow">
+        <div class="empty-state">
+          <div class="empty-mark">MM</div>
+          <strong>Selecciona una conversación</strong>
+          <span>Cuando abras un chat, los mensajes aparecerán aquí.</span>
+        </div>
+      </div>
+
+      <div class="composer border-top">
+        <div class="composer-row">
+          <textarea id="messageInput" placeholder="Escribe un mensaje..."></textarea>
+          <button id="btnSendMessage" class="btn btn-primary" disabled>Enviar</button>
+        </div>
+        <p class="muted small-hint text-center">
+          Entregado al abrir la app · Leído al abrir el chat
+        </p>
+      </div>
+    </main>
+
+    <!-- Right Column -->
+    <aside class="col col-right flex-col">
+      <div class="info-section border-bottom">
+        <h2 class="title">Chats y grupos</h2>
+        <p class="muted small-hint">Solo conversaciones donde tu perfil es miembro.</p>
+      </div>
+
+      <div class="actions-section border-bottom flex-col">
+        <h3 class="section-title">Nuevo</h3>
+        <button id="btnCreatePrivate" class="btn btn-primary btn-full">Chat privado</button>
+        <button id="btnCreateGroup" class="btn btn-full">Crear grupo</button>
+        <button id="btnRefreshAll" class="btn btn-full" hidden>Actualizar</button>
+      </div>
+
+      <div class="groups-section border-bottom flex-grow flex-col">
+         <div id="conversationList" class="chat-list flex-grow"></div>
+      </div>
+
+      <div class="notifications-section">
+        <h3 class="section-title">Notificaciones</h3>
+        <button id="btnCreateNotif" class="btn btn-full">Crear prueba</button>
+        <button id="btnLoadNotif" class="btn btn-full">Recargar</button>
+        <div id="notifList" class="notif-list"></div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="modal-root" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog card flex-col" role="dialog" aria-labelledby="modal-heading">
+      <div class="row-space-between">
+        <h2 class="title" id="modal-heading">Nuevo chat</h2>
+        <button type="button" class="btn btn-icon" id="modal-close" aria-label="Cerrar">x</button>
+      </div>
+      <input type="search" id="modal-search" placeholder="Buscar por nombre o UID" autocomplete="off" />
+      <div id="modal-options" class="modal-options flex-col"></div>
+      <div id="modal-group-panel" class="modal-group-panel">
+        <label class="field-label">Nombre del grupo</label>
+        <input id="modal-group-name" type="text" placeholder="Nombre del grupo" />
+        <p class="muted small-hint" id="modal-group-hint">Marca uno o más contactos. Puedes añadir nuevos con la primera opción.</p>
+        <button type="button" class="btn btn-primary" id="modal-group-submit">Crear grupo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-root" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog card flex-col confirm-dialog" role="dialog" aria-labelledby="confirm-heading">
+      <div class="row-space-between">
+        <h2 class="title" id="confirm-heading">Eliminar cuenta</h2>
+        <button type="button" class="btn btn-icon" id="confirm-close" aria-label="Cerrar">x</button>
+      </div>
+      <p class="muted confirm-copy">Esto eliminará tu perfil y limpiará tus vínculos. Esta acción no se puede deshacer.</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn" id="confirm-cancel">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete-account">Eliminar cuenta</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/config.js"></script>
+  <script src="/static/app.js?v=12"></script>
+</body>
+</html>
