@@ -11,13 +11,14 @@ from fastapi.responses import HTMLResponse
 
 load_dotenv(Path(__file__).parent.parent / '.env')
 
+app = FastAPI(title='Message Service', version='1.0')
+
 
 @app.get('/health', response_class=HTMLResponse)
 async def health():
     return '<html><body>OK</body></html>'
 
 
-app = FastAPI(title='Message Service', version='1.0')
 container = Container()
 app.container = container
 app.include_router(messages.router)

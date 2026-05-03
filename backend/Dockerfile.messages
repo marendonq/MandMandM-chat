@@ -1,0 +1,19 @@
+# Message Service (FastAPI) — puerto 8004
+# Build desde la raíz del repo:
+#   docker build -f backend/Dockerfile.messages -t mandmandm-messages:latest .
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+COPY backend/app ./app
+
+EXPOSE 8004
+
+CMD ["uvicorn", "app.main_messages:app", "--host", "0.0.0.0", "--port", "8004"]

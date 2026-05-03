@@ -1,3 +1,5 @@
+# Microservicio: Presence Service (solo presencia; sin /users)
+# Puerto: 8006
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from pathlib import Path
@@ -7,12 +9,14 @@ from fastapi.responses import HTMLResponse
 
 load_dotenv(Path(__file__).parent.parent / '.env')
 
+app = FastAPI(title='Presence Service', version='1.0')
+
 
 @app.get('/health', response_class=HTMLResponse)
 async def health():
     return '<html><body>OK</body></html>'
 
-app = FastAPI(title='Presence Service', version='1.0')
+
 container = Container()
 app.container = container
 app.include_router(presence.router)
