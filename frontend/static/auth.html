@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>M&amp;M — Entrar</title>
+  <style>
+    :root {
+      --bg: #02030a;
+      --card: rgba(9, 12, 24, 0.42);
+      --card-strong: rgba(14, 18, 34, 0.88);
+      --border: rgba(255, 255, 255, 0.16);
+      --text: #f8fbff;
+      --muted: #aeb8cf;
+      --accent: #70e1ff;
+      --accent-dim: #a855f7;
+      --warn: #ffb86b;
+      --danger: #ff7a90;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+      background: transparent;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    .orb-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(112, 225, 255, 0.16), transparent 30%),
+        radial-gradient(circle at 80% 78%, rgba(168, 85, 247, 0.2), transparent 28%),
+        #02030a;
+    }
+    .orb-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      opacity: 0.95;
+    }
+    .orb-vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(2, 3, 10, 0.74), rgba(2, 3, 10, 0.18) 48%, rgba(2, 3, 10, 0.72)),
+        radial-gradient(circle at 50% 46%, transparent 0 38%, rgba(2, 3, 10, 0.74) 82%),
+        rgba(2, 3, 10, 0.18);
+    }
+    .page-shell {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(340px, 430px);
+      align-items: center;
+      gap: clamp(2rem, 7vw, 7rem);
+      padding: clamp(1.25rem, 4vw, 4rem);
+    }
+    .brand-panel {
+      max-width: 620px;
+      padding-left: clamp(0rem, 3vw, 2rem);
+    }
+    .brand-kicker {
+      margin: 0 0 1rem;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .brand-title {
+      margin: 0;
+      max-width: 10ch;
+      font-size: clamp(3.5rem, 10vw, 8rem);
+      line-height: 0.9;
+      font-weight: 800;
+      text-shadow: 0 22px 70px rgba(112, 225, 255, 0.22);
+    }
+    .brand-copy {
+      max-width: 30rem;
+      margin: 1.4rem 0 0;
+      color: #d7e2f8;
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+      line-height: 1.7;
+    }
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(1.25rem, 3vw, 1.75rem);
+      box-shadow:
+        0 28px 80px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 42px rgba(112, 225, 255, 0.08);
+      backdrop-filter: blur(28px) saturate(145%);
+      -webkit-backdrop-filter: blur(28px) saturate(145%);
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 750;
+      margin: 0 0 .3rem;
+    }
+    .subtitle { color: var(--muted); font-size: .9rem; margin: 0 0 1.2rem; line-height: 1.55; }
+    .oauth-note { margin-top: -.5rem; font-size: .8rem; }
+    .banner {
+      display: none; font-size: .82rem; padding: .7rem .8rem; border-radius: 12px;
+      margin-bottom: 1rem; line-height: 1.4;
+    }
+    .banner.show { display: block; }
+    .banner.warn { background: rgba(255, 184, 107, .14); border: 1px solid rgba(255, 184, 107, .36); color: #ffe0b7; }
+    .banner.info { background: rgba(112, 225, 255, .12); border: 1px solid rgba(112, 225, 255, .28); color: #c8f5ff; }
+    .banner.err { background: rgba(255, 122, 144, .13); border: 1px solid rgba(255, 122, 144, .35); color: #ffd2db; }
+    .section-title {
+      font-size: .7rem; text-transform: uppercase; letter-spacing: .12em;
+      color: #c8d4eb; margin: 0 0 .75rem; font-weight: 700;
+    }
+    .oauth-grid {
+      display: grid; gap: .5rem; margin-bottom: 1.25rem;
+    }
+    .oauth-btn {
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+      min-height: 44px;
+      padding: .68rem 1rem; border-radius: 12px; text-decoration: none; font-size: .9rem; font-weight: 650;
+      border: 1px solid var(--border); background: rgba(255,255,255,.07); color: var(--text);
+      transition: transform .15s, background .15s, border-color .15s;
+    }
+    .oauth-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); border-color: rgba(112,225,255,.55); }
+    .oauth-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .divider {
+      display: flex; align-items: center; gap: .75rem; color: #c6d1e8; font-size: .75rem;
+      margin: 1.25rem 0;
+    }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,.14); }
+    fieldset {
+      border: 1px solid rgba(255,255,255,.14); border-radius: 14px; margin: 0 0 1rem; padding: .95rem 1rem;
+      background: rgba(255,255,255,.035);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    legend { font-weight: 700; font-size: .84rem; padding: 0 .35rem; }
+    label { display: block; font-size: .78rem; color: #c7d2e8; margin-top: .65rem; }
+    label:first-of-type { margin-top: 0; }
+    input {
+      width: 100%; margin-top: .28rem; padding: .68rem .75rem; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.18); color: var(--text); font-size: .94rem;
+    }
+    input:focus { outline: none; border-color: rgba(112,225,255,.72); box-shadow: 0 0 0 3px rgba(112,225,255,.12); }
+    .btn-primary {
+      width: 100%; margin-top: .9rem; min-height: 44px; padding: .68rem; border-radius: 12px; border: none;
+      background: linear-gradient(120deg, var(--accent), var(--accent-dim)); color: #03101a;
+      font-weight: 800; font-size: .94rem; cursor: pointer;
+      box-shadow: 0 14px 35px rgba(112, 225, 255, 0.18);
+    }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+    .link-switch {
+      display: block; width: 100%; margin-top: 1.1rem; padding: 0;
+      background: none; border: none; color: #bfefff;
+      font-size: .88rem; text-decoration: underline; text-underline-offset: 3px;
+      cursor: pointer; text-align: center;
+    }
+    .link-switch:hover { color: var(--text); }
+    .panel-register .link-switch { margin-top: 0; margin-bottom: 1rem; text-align: left; }
+    pre {
+      margin: 1rem 0 0; padding: .65rem; border-radius: 10px; background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.12); font-size: .68rem; overflow: auto;
+      white-space: pre-wrap; word-break: break-all; color: var(--muted); max-height: 140px;
+    }
+    details { margin-top: 1rem; font-size: .75rem; color: var(--muted); }
+    details summary { cursor: pointer; }
+    .hint { font-size: .72rem; color: var(--muted); margin-top: 1rem; line-height: 1.5; }
+    .hint code { background: rgba(0,0,0,.35); padding: .1rem .3rem; border-radius: 4px; font-size: .68rem; }
+    @media (max-width: 860px) {
+      .page-shell {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 1.5rem;
+      }
+      .brand-panel {
+        width: 100%;
+        max-width: 430px;
+        padding: 0;
+      }
+      .brand-title {
+        max-width: none;
+        font-size: clamp(2.8rem, 16vw, 4.5rem);
+      }
+      .brand-copy { display: none; }
+      .card { max-width: 430px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb-stage" aria-hidden="true"><canvas id="orb-canvas"></canvas></div>
+  <div class="orb-vignette" aria-hidden="true"></div>
+
+  <main class="page-shell">
+    <section class="brand-panel" aria-label="M&M Chat">
+      <p class="brand-kicker">MandMandM Chat</p>
+      <h2 class="brand-title">M&amp;M</h2>
+      <p class="brand-copy">Conecta con tus conversaciones, grupos y mensajes desde un espacio rápido y seguro.</p>
+    </section>
+
+  <div class="card">
+    <h1>Entrar a M&amp;M</h1>
+
+    <div id="banner" class="banner" role="status"></div>
+
+    <section id="panel-login" class="panel-login" aria-label="Iniciar sesión">
+      <p class="subtitle">Inicia sesión con email o con un proveedor OAuth.</p>
+
+      <p class="section-title">Continuar con OAuth</p>
+      <p class="subtitle oauth-note">La primera vez con Google te pediremos el teléfono (mismo ID que el registro por email).</p>
+      <div class="oauth-grid">
+        <a class="oauth-btn" id="oauth-google" href="#">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </a>
+        <a class="oauth-btn" id="oauth-github" href="#">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a class="oauth-btn" id="oauth-microsoft" href="#">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 1h10v10H1V1zm12 0h10v10H13V1zM1 13h10v10H1V13zm12 0h10v10H13V13z"/></svg>
+          Microsoft
+        </a>
+      </div>
+
+      <div class="divider">o inicia sesión con email</div>
+
+      <fieldset>
+        <legend>Log in</legend>
+        <label>Email <input type="email" id="log_email" name="email" autocomplete="email" /></label>
+        <label>Contraseña <input type="password" id="log_password" name="password" autocomplete="current-password" /></label>
+        <button type="button" class="btn-primary" id="btn_log">Entrar</button>
+      </fieldset>
+
+      <button type="button" class="link-switch" id="btn_show_register">¿No tienes una cuenta aún?</button>
+    </section>
+
+    <section id="panel-register" class="panel-register" hidden aria-label="Registro">
+      <p class="subtitle">Crea una cuenta con email y contraseña (mín. 8 caracteres).</p>
+
+      <button type="button" class="link-switch" id="btn_show_login">¿Ya tienes cuenta? Inicia sesión</button>
+
+      <fieldset>
+        <legend>Registro</legend>
+        <label>Teléfono <input type="tel" id="reg_phone" name="phone" inputmode="numeric" autocomplete="tel" placeholder="Ej: +57 300 1234567 (será tu ID único)" /></label>
+        <label>Email <input type="email" id="reg_email" name="reg_email" autocomplete="email" /></label>
+        <label>Contraseña (mín. 8) <input type="password" id="reg_password" name="reg_password" autocomplete="new-password" /></label>
+        <label>Nombre completo <input type="text" id="reg_name" name="name" autocomplete="name" /></label>
+        <button type="button" class="btn-primary" id="btn_reg">Crear cuenta</button>
+      </fieldset>
+    </section>
+
+    <pre id="out" hidden>—</pre>
+
+  </div>
+  </main>
+
+  <script>
+    (function initOrbBackground() {
+      const canvas = document.getElementById('orb-canvas');
+      if (!canvas) return;
+
+      const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: false });
+      if (!gl) return;
+
+      const vertexSource = `
+        attribute vec2 position;
+        attribute vec2 uv;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position, 0.0, 1.0);
+        }
+      `;
+
+      const fragmentSource = `
+        precision highp float;
+        uniform float iTime;
+        uniform vec3 iResolution;
+        uniform float hue;
+        uniform float hover;
+        uniform float rot;
+        uniform float hoverIntensity;
+        uniform vec3 backgroundColor;
+        varying vec2 vUv;
+
+        vec3 rgb2yiq(vec3 c) {
+          float y = dot(c, vec3(0.299, 0.587, 0.114));
+          float i = dot(c, vec3(0.596, -0.274, -0.322));
+          float q = dot(c, vec3(0.211, -0.523, 0.312));
+          return vec3(y, i, q);
+        }
+
+        vec3 yiq2rgb(vec3 c) {
+          float r = c.x + 0.956 * c.y + 0.621 * c.z;
+          float g = c.x - 0.272 * c.y - 0.647 * c.z;
+          float b = c.x - 1.106 * c.y + 1.703 * c.z;
+          return vec3(r, g, b);
+        }
+
+        vec3 adjustHue(vec3 color, float hueDeg) {
+          float hueRad = hueDeg * 3.14159265 / 180.0;
+          vec3 yiq = rgb2yiq(color);
+          float cosA = cos(hueRad);
+          float sinA = sin(hueRad);
+          float i = yiq.y * cosA - yiq.z * sinA;
+          float q = yiq.y * sinA + yiq.z * cosA;
+          yiq.y = i;
+          yiq.z = q;
+          return yiq2rgb(yiq);
+        }
+
+        vec3 hash33(vec3 p3) {
+          p3 = fract(p3 * vec3(0.1031, 0.11369, 0.13787));
+          p3 += dot(p3, p3.yxz + 19.19);
+          return -1.0 + 2.0 * fract(vec3(p3.x + p3.y, p3.x + p3.z, p3.y + p3.z) * p3.zyx);
+        }
+
+        float snoise3(vec3 p) {
+          const float K1 = 0.333333333;
+          const float K2 = 0.166666667;
+          vec3 i = floor(p + (p.x + p.y + p.z) * K1);
+          vec3 d0 = p - (i - (i.x + i.y + i.z) * K2);
+          vec3 e = step(vec3(0.0), d0 - d0.yzx);
+          vec3 i1 = e * (1.0 - e.zxy);
+          vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+          vec3 d1 = d0 - (i1 - K2);
+          vec3 d2 = d0 - (i2 - K1);
+          vec3 d3 = d0 - 0.5;
+          vec4 h = max(0.6 - vec4(dot(d0, d0), dot(d1, d1), dot(d2, d2), dot(d3, d3)), 0.0);
+          vec4 n = h * h * h * h * vec4(dot(d0, hash33(i)), dot(d1, hash33(i + i1)), dot(d2, hash33(i + i2)), dot(d3, hash33(i + 1.0)));
+          return dot(vec4(31.316), n);
+        }
+
+        vec4 extractAlpha(vec3 colorIn) {
+          float a = max(max(colorIn.r, colorIn.g), colorIn.b);
+          return vec4(colorIn.rgb / (a + 1e-5), a);
+        }
+
+        const vec3 baseColor1 = vec3(0.611765, 0.262745, 0.996078);
+        const vec3 baseColor2 = vec3(0.298039, 0.760784, 0.913725);
+        const vec3 baseColor3 = vec3(0.062745, 0.078431, 0.600000);
+        const float innerRadius = 0.6;
+        const float noiseScale = 0.65;
+
+        float light1(float intensity, float attenuation, float dist) {
+          return intensity / (1.0 + dist * attenuation);
+        }
+        float light2(float intensity, float attenuation, float dist) {
+          return intensity / (1.0 + dist * dist * attenuation);
+        }
+
+        vec4 draw(vec2 uv) {
+          vec3 color1 = adjustHue(baseColor1, hue);
+          vec3 color2 = adjustHue(baseColor2, hue);
+          vec3 color3 = adjustHue(baseColor3, hue);
+          float ang = atan(uv.y, uv.x);
+          float len = length(uv);
+          float invLen = len > 0.0 ? 1.0 / len : 0.0;
+          float bgLuminance = dot(backgroundColor, vec3(0.299, 0.587, 0.114));
+          float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
+          float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
+          float d0 = distance(uv, (r0 * invLen) * uv);
+          float v0 = light1(1.0, 10.0, d0);
+          v0 *= smoothstep(r0 * 1.05, r0, len);
+          float innerFade = smoothstep(r0 * 0.8, r0 * 0.95, len);
+          v0 *= mix(innerFade, 1.0, bgLuminance * 0.7);
+          float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
+          float a = iTime * -1.0;
+          vec2 pos = vec2(cos(a), sin(a)) * r0;
+          float d = distance(uv, pos);
+          float v1 = light2(1.5, 5.0, d);
+          v1 *= light1(1.0, 50.0, d0);
+          float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
+          float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
+          vec3 colBase = mix(color1, color2, cl);
+          float fadeAmount = mix(1.0, 0.1, bgLuminance);
+          vec3 darkCol = mix(color3, colBase, v0);
+          darkCol = (darkCol + v1) * v2 * v3;
+          darkCol = clamp(darkCol, 0.0, 1.0);
+          vec3 lightCol = (colBase + v1) * mix(1.0, v2 * v3, fadeAmount);
+          lightCol = mix(backgroundColor, lightCol, v0);
+          lightCol = clamp(lightCol, 0.0, 1.0);
+          vec3 finalCol = mix(darkCol, lightCol, bgLuminance);
+          return extractAlpha(finalCol);
+        }
+
+        void main() {
+          vec2 fragCoord = vUv * iResolution.xy;
+          vec2 center = iResolution.xy * 0.5;
+          float size = min(iResolution.x, iResolution.y);
+          vec2 uv = (fragCoord - center) / size * 2.0;
+          uv.x -= 0.22;
+          float s = sin(rot);
+          float c = cos(rot);
+          uv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y);
+          uv.x += hover * hoverIntensity * 0.1 * sin(uv.y * 10.0 + iTime);
+          uv.y += hover * hoverIntensity * 0.1 * sin(uv.x * 10.0 + iTime);
+          vec4 col = draw(uv);
+          gl_FragColor = vec4(col.rgb * col.a, col.a);
+        }
+      `;
+
+      function compile(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        return shader;
+      }
+
+      const program = gl.createProgram();
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, vertexSource));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragmentSource));
+      gl.linkProgram(program);
+      gl.useProgram(program);
+
+      const vertices = new Float32Array([
+        -1, -1, 0, 0,
+         3, -1, 2, 0,
+        -1,  3, 0, 2,
+      ]);
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+      const position = gl.getAttribLocation(program, 'position');
+      const uv = gl.getAttribLocation(program, 'uv');
+      gl.enableVertexAttribArray(position);
+      gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 16, 0);
+      gl.enableVertexAttribArray(uv);
+      gl.vertexAttribPointer(uv, 2, gl.FLOAT, false, 16, 8);
+
+      const uniforms = {
+        iTime: gl.getUniformLocation(program, 'iTime'),
+        iResolution: gl.getUniformLocation(program, 'iResolution'),
+        hue: gl.getUniformLocation(program, 'hue'),
+        hover: gl.getUniformLocation(program, 'hover'),
+        rot: gl.getUniformLocation(program, 'rot'),
+        hoverIntensity: gl.getUniformLocation(program, 'hoverIntensity'),
+        backgroundColor: gl.getUniformLocation(program, 'backgroundColor'),
+      };
+
+      let targetHover = 1;
+      let hover = 1;
+      let rotation = 0;
+      let lastTime = 0;
+
+      function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        const width = Math.max(1, window.innerWidth);
+        const height = Math.max(1, window.innerHeight);
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+
+      window.addEventListener('resize', resize);
+      window.addEventListener('mousemove', function (event) {
+        const x = event.clientX / window.innerWidth - 0.5;
+        const y = event.clientY / window.innerHeight - 0.5;
+        targetHover = Math.sqrt(x * x + y * y) < 0.38 ? 1 : 0.35;
+      });
+      window.addEventListener('mouseleave', function () {
+        targetHover = 0.7;
+      });
+      resize();
+
+      function render(time) {
+        const seconds = time * 0.001;
+        const dt = lastTime ? seconds - lastTime : 0;
+        lastTime = seconds;
+        hover += (targetHover - hover) * 0.08;
+        rotation += dt * 0.08;
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform1f(uniforms.iTime, seconds);
+        gl.uniform3f(uniforms.iResolution, canvas.width, canvas.height, canvas.width / canvas.height);
+        gl.uniform1f(uniforms.hue, 18.0);
+        gl.uniform1f(uniforms.hover, hover);
+        gl.uniform1f(uniforms.rot, rotation);
+        gl.uniform1f(uniforms.hoverIntensity, 0.55);
+        gl.uniform3f(uniforms.backgroundColor, 0.008, 0.012, 0.04);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    })();
+  </script>
+  <script src="/static/config.js"></script>
+  <script>
+    const out = document.getElementById('out');
+    const banner = document.getElementById('banner');
+    const sessionKey = 'mm_session';
+    const panelLogin = document.getElementById('panel-login');
+    const panelRegister = document.getElementById('panel-register');
+    const apiBaseUrl = (window.MM_CONFIG && window.MM_CONFIG.API_BASE_URL) || 'http://127.0.0.1:8000';
+
+    document.getElementById('oauth-google').href = apiBaseUrl + '/auth/oauth/google';
+    document.getElementById('oauth-github').href = apiBaseUrl + '/auth/oauth/github';
+    document.getElementById('oauth-microsoft').href = apiBaseUrl + '/auth/oauth/microsoft';
+
+    function show(obj) {
+      out.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+    }
+
+    function saveSession(session) {
+      localStorage.setItem(sessionKey, JSON.stringify(session));
+    }
+
+    function decodeJwtSub(token) {
+      try {
+        const payload = token.split('.')[1];
+        const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const json = decodeURIComponent(escape(atob(b64)));
+        const obj = JSON.parse(json);
+        return obj.sub || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function showBanner(text, kind) {
+      banner.textContent = text;
+      banner.className = 'banner show ' + (kind || 'info');
+    }
+
+    function clearBanner() {
+      banner.className = 'banner';
+      banner.textContent = '';
+    }
+
+    function goAppSoon() {
+      setTimeout(() => {
+        window.location.href = '/static/app.html';
+      }, 700);
+    }
+
+    function showLoginPanel() {
+      panelRegister.hidden = true;
+      panelLogin.hidden = false;
+      clearBanner();
+    }
+
+    function showRegisterPanel() {
+      panelLogin.hidden = true;
+      panelRegister.hidden = false;
+      clearBanner();
+    }
+
+    document.getElementById('btn_show_register').onclick = () => {
+      showRegisterPanel();
+      document.getElementById('reg_email').focus();
+    };
+
+    document.getElementById('btn_show_login').onclick = () => {
+      showLoginPanel();
+      document.getElementById('log_email').focus();
+    };
+
+    (function readQuery() {
+      const q = new URLSearchParams(window.location.search);
+      const oauth = q.get('oauth');
+      const idp = q.get('idp') || 'proveedor';
+      if (oauth === 'missing') {
+        showBanner('OAuth (' + idp + '): falta CLIENT_ID o CLIENT_SECRET en el servidor.', 'warn');
+      } else if (oauth === 'unknown') {
+        showBanner('Proveedor OAuth no soportado: ' + idp + '.', 'warn');
+      } else if (oauth === 'failed') {
+        showBanner('La autenticación OAuth falló. Intenta nuevamente.', 'warn');
+      } else if (oauth === 'need_login') {
+        showBanner('Debes iniciar sesión para continuar.', 'info');
+      }
+      if (q.get('register') === '1') {
+        showRegisterPanel();
+      }
+    })();
+
+    async function parseError(res, data) {
+      const detail = data && data.detail;
+      if (typeof detail === 'string') return detail;
+      if (Array.isArray(detail)) return detail.map((d) => d.msg || JSON.stringify(d)).join('; ');
+      return res.statusText || 'Error ' + res.status;
+    }
+
+    document.getElementById('btn_reg').onclick = async () => {
+      const body = {
+        phone: document.getElementById('reg_phone').value.trim(),
+        email: document.getElementById('reg_email').value.trim(),
+        password: document.getElementById('reg_password').value,
+        full_name: document.getElementById('reg_name').value.trim(),
+      };
+      if (!body.phone || !body.email || !body.password || !body.full_name) {
+        showBanner('Completa teléfono, email, contraseña y nombre.', 'err');
+        return;
+      }
+      try {
+        const r = await fetch(apiBaseUrl + '/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await r.json().catch(() => ({}));
+        show({ status: r.status, ...data });
+        if (r.ok && data.access_token && data.user && data.user.id) {
+          saveSession({
+            access_token: data.access_token,
+            token_type: 'bearer',
+            provider: 'password',
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              full_name: data.user.full_name,
+              unique_id: data.unique_id,
+            },
+          });
+          showBanner('Cuenta creada. Redirigiendo…', 'info');
+          goAppSoon();
+        } else {
+          showBanner(await parseError(r, data), 'err');
+        }
+      } catch (e) {
+        show(String(e));
+        showBanner(String(e), 'err');
+      }
+    };
+
+    document.getElementById('btn_log').onclick = async () => {
+      const body = {
+        email: document.getElementById('log_email').value.trim(),
+        password: document.getElementById('log_password').value,
+      };
+      if (!body.email || !body.password) {
+        showBanner('Introduce email y contraseña.', 'err');
+        return;
+      }
+      try {
+        const r = await fetch(apiBaseUrl + '/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await r.json().catch(() => ({}));
+        show({ status: r.status, ...data });
+        if (r.ok && data.access_token) {
+          const userId = decodeJwtSub(data.access_token);
+          saveSession({
+            access_token: data.access_token,
+            token_type: 'bearer',
+            provider: 'password',
+            user: {
+              id: userId,
+              email: body.email,
+              full_name: body.email,
+            },
+          });
+          showBanner('Sesión iniciada. Redirigiendo…', 'info');
+          goAppSoon();
+        } else {
+          showBanner(await parseError(r, data), 'err');
+        }
+      } catch (e) {
+        show(String(e));
+        showBanner(String(e), 'err');
+      }
+    };
+  </script>
+</body>
+</html>

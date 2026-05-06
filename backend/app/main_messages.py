@@ -6,21 +6,18 @@ from dotenv import load_dotenv
 from pathlib import Path
 from app.infrastructure.container import Container
 from app.infrastructure.handlers import messages
-from fastapi.responses import HTMLResponse
 
 
 load_dotenv(Path(__file__).parent.parent / '.env')
 
+
 app = FastAPI(title='Message Service', version='1.0')
-
-
-@app.get('/health', response_class=HTMLResponse)
-async def health():
-    return '<html><body>OK</body></html>'
-
-
 container = Container()
 app.container = container
 app.include_router(messages.router)
 container.wire(modules=['app.infrastructure.handlers.messages'])
 
+
+@app.get('/health')
+async def health():
+ return {'status': 'ok', 'service': 'messages'}

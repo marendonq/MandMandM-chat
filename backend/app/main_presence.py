@@ -5,20 +5,18 @@ from dotenv import load_dotenv
 from pathlib import Path
 from app.infrastructure.container import Container
 from app.infrastructure.handlers import presence
-from fastapi.responses import HTMLResponse
+
 
 load_dotenv(Path(__file__).parent.parent / '.env')
 
+
 app = FastAPI(title='Presence Service', version='1.0')
-
-
-@app.get('/health', response_class=HTMLResponse)
-async def health():
-    return '<html><body>OK</body></html>'
-
-
 container = Container()
 app.container = container
 app.include_router(presence.router)
 container.wire(modules=['app.infrastructure.handlers.presence'])
 
+
+@app.get('/health')
+async def health():
+ return {'status': 'ok', 'service': 'presence'}
