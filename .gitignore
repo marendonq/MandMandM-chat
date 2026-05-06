@@ -10,3 +10,6 @@ oauth_local.ps1
 
 k8s/aws-ec2/02-secret.yaml
 backend/.env
+
+
+k8s/aws-ec2/02-secret.yaml

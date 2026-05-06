@@ -8,9 +8,23 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: chat.example.com
+    - host: 18.235.3.246
       http:
         paths:
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-auth
+                port:
+                  number: 8000
+          - path: /users
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-users
+                port:
+                  number: 8002
           - path: /messages
             pathType: Prefix
             backend:
@@ -39,20 +53,6 @@ spec:
                 name: mandmandm-presence
                 port:
                   number: 8006
-          - path: /auth
-            pathType: Prefix
-            backend:
-              service:
-                name: mandmandm-auth
-                port:
-                  number: 8000
-          - path: /users
-            pathType: Prefix
-            backend:
-              service:
-                name: mandmandm-users
-                port:
-                  number: 8002
           - path: /groups
             pathType: Prefix
             backend:
