@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-frontend
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-messages
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-messages
+  ports:
+    - name: http
+      port: 8004
+      targetPort: 8004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-files
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-files
+  ports:
+    - name: http
+      port: 8005
+      targetPort: 8005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-presence
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-presence
+  ports:
+    - name: http
+      port: 8006
+      targetPort: 8006
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-auth
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-auth
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-users
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-users
+  ports:
+    - name: http
+      port: 8002
+      targetPort: 8002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-groups
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-groups
+  ports:
+    - name: http
+      port: 8007
+      targetPort: 8007
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mandmandm-notifications
+  namespace: mandmandm
+spec:
+  type: ClusterIP
+  selector:
+    app: mandmandm-notifications
+  ports:
+    - name: http
+      port: 8008
+      targetPort: 8008

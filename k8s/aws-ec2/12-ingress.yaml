@@ -1,0 +1,76 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mandmandm-ingress
+  namespace: mandmandm
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: chat.example.com
+      http:
+        paths:
+          - path: /messages
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-messages
+                port:
+                  number: 8004
+          - path: /files
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-files
+                port:
+                  number: 8005
+          - path: /file-metadata
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-files
+                port:
+                  number: 8005
+          - path: /presence
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-presence
+                port:
+                  number: 8006
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-auth
+                port:
+                  number: 8000
+          - path: /users
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-users
+                port:
+                  number: 8002
+          - path: /groups
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-groups
+                port:
+                  number: 8007
+          - path: /notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-notifications
+                port:
+                  number: 8008
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-frontend
+                port:
+                  number: 3000
