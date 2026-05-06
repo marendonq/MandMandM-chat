@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: 18.235.3.246
+    - host: 3.210.139.202
       http:
         paths:
           - path: /auth

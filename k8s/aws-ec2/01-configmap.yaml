@@ -4,8 +4,8 @@ metadata:
   name: mandmandm-config
   namespace: mandmandm
 data:
-  FRONTEND_PUBLIC_BASE_URL: "http://18.235.3.246"
-  FRONTEND_API_BASE_URL: "http://18.235.3.246"
+  FRONTEND_PUBLIC_BASE_URL: "http://3.210.139.202"
+  FRONTEND_API_BASE_URL: "http://3.210.139.202"
   MONGO_DB_NAME: "mandmandm_messages"
   PRESENCE_REDIS_NAMESPACE: "presence"
   PRESENCE_USER_TTL_SECONDS: "1800"
