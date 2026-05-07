@@ -25,6 +25,13 @@ spec:
                 name: mandmandm-users
                 port:
                   number: 8002
+          - path: /conversations
+            pathType: Prefix
+            backend:
+              service:
+                name: mandmandm-conversations
+                port:
+                  number: 8003
           - path: /messages
             pathType: Prefix
             backend:
