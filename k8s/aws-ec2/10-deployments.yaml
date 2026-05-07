@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: cadavidmateo90/mandmandm-front:1.0.1
+          image: cadavidmateo90/mandmandm-front:1.0.2
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
