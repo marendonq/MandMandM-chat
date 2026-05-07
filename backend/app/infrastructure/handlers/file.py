@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse as DownloadFileResponse
 from app.application.services.file import (
     UploadFileService,
     GetFileService,
@@ -75,6 +78,28 @@ def get_file(
         raise HTTPException(status_code=404, detail=str(e))
 
 
+@router.get("/{file_id}/download")
+@inject
+def download_file(
+    file_id: str,
+    service: GetFileService = Depends(Provide[Container.get_file_service]),
+):
+    try:
+        entity = service.execute(file_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    path = Path(entity.storage_path)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Stored file not found")
+
+    return DownloadFileResponse(
+        path=str(path),
+        filename=entity.file_name,
+        media_type="application/octet-stream",
+    )
+
+
 @router.get("/message/{message_id}", response_model=list[FileResponse])
 @inject
 def get_files_by_message(
@@ -96,4 +121,3 @@ def delete_file(
         return {"message": "File deleted successfully"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-

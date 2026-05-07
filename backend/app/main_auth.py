@@ -15,9 +15,6 @@ app = FastAPI(title='Auth Service', version='1.0')
 container = Container()
 app.container = container
 
-@app.get('/health', response_class=HTMLResponse)
-async def health():
-    return '<html><body>OK</body></html>'
 
 # Solo registra los routers de autenticación
 app.include_router(auth.router)
@@ -26,4 +23,8 @@ container.wire(modules=[
     'app.infrastructure.handlers.auth',
     'app.infrastructure.handlers.oauth_redirect',
 ])
+
+@app.get('/health', response_class=HTMLResponse)
+async def health():
+    return '<html><body>OK</body></html>'
 

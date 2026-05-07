@@ -1,0 +1,348 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-frontend
+  namespace: mandmandm
+  labels:
+    app: mandmandm-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-frontend
+  template:
+    metadata:
+      labels:
+        app: mandmandm-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: cadavidmateo90/mandmandm-front:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+          readinessProbe:
+            httpGet:
+              path: /static/config.js
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-auth
+  namespace: mandmandm
+  labels:
+    app: mandmandm-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-auth
+  template:
+    metadata:
+      labels:
+        app: mandmandm-auth
+    spec:
+      containers:
+        - name: auth
+          image: cadavidmateo90/mandmandm-auth:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-users
+  namespace: mandmandm
+  labels:
+    app: mandmandm-users
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-users
+  template:
+    metadata:
+      labels:
+        app: mandmandm-users
+    spec:
+      containers:
+        - name: users
+          image: cadavidmateo90/mandmandm-users:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8002
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-conversations
+  namespace: mandmandm
+  labels:
+    app: mandmandm-conversations
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-conversations
+  template:
+    metadata:
+      labels:
+        app: mandmandm-conversations
+    spec:
+      containers:
+        - name: conversations
+          image: cadavidmateo90/mandmandm-conversations:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8003
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-messages
+  namespace: mandmandm
+  labels:
+    app: mandmandm-messages
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-messages
+  template:
+    metadata:
+      labels:
+        app: mandmandm-messages
+    spec:
+      containers:
+        - name: messages
+          image: cadavidmateo90/mandmandm-messages:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8004
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-files
+  namespace: mandmandm
+  labels:
+    app: mandmandm-files
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-files
+  template:
+    metadata:
+      labels:
+        app: mandmandm-files
+    spec:
+      containers:
+        - name: files
+          image: cadavidmateo90/mandmandm-files:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8005
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8005
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-presence
+  namespace: mandmandm
+  labels:
+    app: mandmandm-presence
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-presence
+  template:
+    metadata:
+      labels:
+        app: mandmandm-presence
+    spec:
+      containers:
+        - name: presence
+          image: cadavidmateo90/mandmandm-presence:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8006
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8006
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-groups
+  namespace: mandmandm
+  labels:
+    app: mandmandm-groups
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-groups
+  template:
+    metadata:
+      labels:
+        app: mandmandm-groups
+    spec:
+      containers:
+        - name: groups
+          image: cadavidmateo90/mandmandm-groups:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8007
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8007
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-notifications
+  namespace: mandmandm
+  labels:
+    app: mandmandm-notifications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-notifications
+  template:
+    metadata:
+      labels:
+        app: mandmandm-notifications
+    spec:
+      containers:
+        - name: notifications
+          image: cadavidmateo90/mandmandm-notifications:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8008
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8008
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi

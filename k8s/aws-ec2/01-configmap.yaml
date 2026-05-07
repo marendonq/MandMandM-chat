@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mandmandm-config
+  namespace: mandmandm
+data:
+  FRONTEND_PUBLIC_BASE_URL: "http://3.210.139.202:31442"
+  FRONTEND_API_BASE_URL: "http://3.210.139.202:31442"
+  MONGO_DB_NAME: "mandmandm_messages"
+  PRESENCE_REDIS_NAMESPACE: "presence"
+  PRESENCE_USER_TTL_SECONDS: "1800"
+  PRESENCE_RECEIPT_TTL_SECONDS: "604800"
+  MAX_FILE_SIZE: "10485760"

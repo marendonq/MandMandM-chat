@@ -7,3 +7,6 @@ __pycache__/
 # Credenciales OAuth locales (PowerShell, sin dotenv)
 backend/oauth_local.ps1
 oauth_local.ps1
+
+k8s/aws-ec2/02-secret.yaml
+backend/.env
