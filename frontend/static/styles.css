@@ -548,6 +548,62 @@ textarea:focus {
   padding-inline: 22px;
 }
 
+.composer .btn-icon {
+  min-height: 48px;
+  min-width: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.composer .btn-icon svg {
+  opacity: 0.7;
+  transition: opacity 0.16s ease;
+}
+
+.composer .btn-icon:hover svg {
+  opacity: 1;
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: var(--radius);
+  background: rgba(118, 215, 232, 0.08);
+  border: 1px solid rgba(118, 215, 232, 0.22);
+  font-size: 0.84rem;
+}
+
+.file-preview-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--c-primary-strong);
+}
+
+.bubble-attachment {
+  margin-top: 6px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bubble--out .bubble-attachment {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
 .banner {
   padding: 11px 13px;
   margin: 12px 20px 0;

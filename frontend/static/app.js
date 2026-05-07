@@ -1,6 +1,5 @@
 (function () {
   const sessionKey = "mm_session";
-  const messageStoreKey = "mm_fake_messages";
   const apiBaseUrl = (window.MM_CONFIG && window.MM_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000";
 
   const qs = (id) => document.getElementById(id);
@@ -19,16 +18,24 @@
   const btnSendMessage = qs("btnSendMessage");
   const btnDeleteConversation = qs("btnDeleteConversation");
   const btnCopyUID = qs("btnCopyUID");
+  const btnAttachFile = qs("btnAttachFile");
+  const fileInput = qs("fileInput");
+  const filePreview = qs("filePreview");
+  const filePreviewName = qs("filePreviewName");
+  const btnCancelFile = qs("btnCancelFile");
   const confirmRoot = qs("confirm-root");
   const confirmClose = qs("confirm-close");
   const confirmCancel = qs("confirm-cancel");
   const confirmDeleteAccount = qs("confirm-delete-account");
+
+  let pendingFile = null;
 
   let session = null;
   let profile = null;
   let contactsById = new Map();
   let peerProfilesById = new Map();
   let conversations = [];
+  let messagesByConversation = new Map();
   let activeConversation = null;
   let receiptPollTimer = null;
   const RECEIPT_POLL_MS = 2500;
@@ -59,18 +66,6 @@
     localStorage.removeItem(sessionKey);
   }
 
-  function readFakeMessages() {
-    try {
-      return JSON.parse(localStorage.getItem(messageStoreKey) || "{}");
-    } catch (_) {
-      return {};
-    }
-  }
-
-  function saveFakeMessages(db) {
-    localStorage.setItem(messageStoreKey, JSON.stringify(db));
-  }
-
   function apiUrl(path) {
     return `${apiBaseUrl}${path}`;
   }
@@ -95,9 +90,46 @@
     return true;
   }
 
+  function messageIdOf(m) {
+    return m.message_id || m.id;
+  }
+
+  function recipientIdForMessage(m, conv) {
+    if (m.recipient_id) return m.recipient_id;
+    const members = conv?.members || [];
+    return members.find((id) => id !== m.sender_id) || null;
+  }
+
+  function normalizeMessage(m, conv) {
+    return {
+      ...m,
+      message_id: messageIdOf(m),
+      recipient_id: recipientIdForMessage(m, conv),
+      status: m.status || "SENT",
+    };
+  }
+
+  function fileDownloadUrl(fileId) {
+    return apiUrl(`/files/${encodeURIComponent(fileId)}/download`);
+  }
+
+  async function hydrateFilesForMessages(list) {
+    await Promise.all(
+      list
+        .filter((m) => m.file_id && !m.file)
+        .map(async (m) => {
+          try {
+            m.file = await api(`/files/${encodeURIComponent(m.file_id)}`);
+          } catch (_) {
+            m.file = { id: m.file_id, file_name: "Archivo adjunto" };
+          }
+        }),
+    );
+  }
+
   async function postDeliveredForMessage(m) {
     const uid = session.user.id;
-    await api(`/presence/messages/${encodeURIComponent(m.message_id)}/delivered`, {
+    await api(`/presence/messages/${encodeURIComponent(messageIdOf(m))}/delivered`, {
       method: "POST",
       body: JSON.stringify({ recipient_id: uid }),
     });
@@ -105,7 +137,7 @@
 
   async function postReadForMessage(m) {
     const uid = session.user.id;
-    await api(`/presence/messages/${encodeURIComponent(m.message_id)}/read`, {
+    await api(`/presence/messages/${encodeURIComponent(messageIdOf(m))}/read`, {
       method: "POST",
       body: JSON.stringify({ recipient_id: uid }),
     });
@@ -125,14 +157,15 @@
   }
 
   async function syncReceiptStatusForConversation(convId) {
-    const db = readFakeMessages();
-    const list = db[convId] || [];
+    const conv = conversations.find((c) => c.id === convId) || activeConversation;
+    const list = messagesByConversation.get(convId) || [];
     const uid = session.user.id;
     let changed = false;
     for (const m of list) {
+      m.recipient_id = recipientIdForMessage(m, conv);
       if (m.recipient_id !== uid && m.sender_id !== uid) continue;
       try {
-        const data = await api(`/presence/messages/${encodeURIComponent(m.message_id)}`);
+        const data = await api(`/presence/messages/${encodeURIComponent(messageIdOf(m))}`);
         const next = receiptStatusFromServerPayload(m, data, uid);
         if (next && receiptStatusRank(next) > receiptStatusRank(m.status || "SENT")) {
           m.status = next;
@@ -140,18 +173,19 @@
         }
       } catch (_) {}
     }
-    if (changed) saveFakeMessages(db);
+    if (changed) messagesByConversation.set(convId, list);
   }
 
   async function syncReceiptStatusFromServerForAllMessages() {
-    const db = readFakeMessages();
     let changed = false;
     const uid = session.user.id;
-    for (const convId of Object.keys(db)) {
-      for (const m of db[convId]) {
+    for (const [convId, list] of messagesByConversation.entries()) {
+      const conv = conversations.find((c) => c.id === convId);
+      for (const m of list) {
+        m.recipient_id = recipientIdForMessage(m, conv);
         if (m.recipient_id !== uid && m.sender_id !== uid) continue;
         try {
-          const data = await api(`/presence/messages/${encodeURIComponent(m.message_id)}`);
+          const data = await api(`/presence/messages/${encodeURIComponent(messageIdOf(m))}`);
           const next = receiptStatusFromServerPayload(m, data, uid);
           if (next && receiptStatusRank(next) > receiptStatusRank(m.status || "SENT")) {
             m.status = next;
@@ -160,7 +194,7 @@
         } catch (_) {}
       }
     }
-    if (changed) saveFakeMessages(db);
+    if (changed) messagesByConversation = new Map(messagesByConversation);
   }
 
   function stopReceiptPolling() {
@@ -198,11 +232,12 @@
   }
 
   async function autoDeliverAllIncomingMessages() {
-    const db = readFakeMessages();
     let changed = false;
     const uid = session.user.id;
-    for (const convId of Object.keys(db)) {
-      for (const m of db[convId]) {
+    for (const [convId, list] of messagesByConversation.entries()) {
+      const conv = conversations.find((c) => c.id === convId);
+      for (const m of list) {
+        m.recipient_id = recipientIdForMessage(m, conv);
         if (m.recipient_id !== uid) continue;
         const st = m.status || "SENT";
         if (st !== "SENT") continue;
@@ -216,15 +251,16 @@
         }
       }
     }
-    if (changed) saveFakeMessages(db);
+    if (changed) messagesByConversation = new Map(messagesByConversation);
   }
 
   async function markConversationMessagesRead(convId) {
-    const db = readFakeMessages();
-    const list = db[convId] || [];
+    const conv = conversations.find((c) => c.id === convId) || activeConversation;
+    const list = messagesByConversation.get(convId) || [];
     const uid = session.user.id;
     let changed = false;
     for (const m of list) {
+      m.recipient_id = recipientIdForMessage(m, conv);
       if (m.recipient_id !== uid) continue;
       let st = m.status || "SENT";
       if (st === "SENT") {
@@ -250,14 +286,16 @@
         }
       }
     }
-    if (changed) saveFakeMessages(db);
+    if (changed) messagesByConversation.set(convId, list);
   }
 
   function unreadCountForConversation(convId) {
-    const list = readFakeMessages()[convId] || [];
+    const conv = conversations.find((c) => c.id === convId);
+    const list = messagesByConversation.get(convId) || [];
     const uid = session.user.id;
     let n = 0;
     for (const m of list) {
+      m.recipient_id = recipientIdForMessage(m, conv);
       if (m.recipient_id !== uid) continue;
       if ((m.status || "SENT") !== "READ") n++;
     }
@@ -620,6 +658,16 @@
     await hydratePeerProfilesForConversations();
   }
 
+  async function loadMessagesForConversation(convId) {
+    if (!convId) return [];
+    const conv = conversations.find((c) => c.id === convId) || activeConversation;
+    const data = await api(`/conversations/${encodeURIComponent(convId)}/messages?limit=100`);
+    const list = (data.messages || []).map((m) => normalizeMessage(m, conv));
+    await hydrateFilesForMessages(list);
+    messagesByConversation.set(convId, list);
+    return list;
+  }
+
   function renderConversations() {
     if (!conversations.length) {
       conversationList.innerHTML = `<div class="item muted">No hay conversaciones en las que participes.</div>`;
@@ -691,8 +739,7 @@
       </div>`;
       return;
     }
-    const db = readFakeMessages();
-    const list = db[activeConversation.id] || [];
+    const list = messagesByConversation.get(activeConversation.id) || [];
     if (!list.length) {
       messageArea.className = "message-area muted flex-grow";
       messageArea.innerHTML = `<div class="empty-state">
@@ -712,9 +759,15 @@
         const meta = out ? stLabel : `Recibido · ${stLabel}`;
         const rowClass = out ? "bubble-row bubble-row--out" : "bubble-row bubble-row--in";
         const bubbleClass = out ? "bubble bubble--out" : "bubble bubble--in";
+        const content = escapeHtml(m.content || "(sin contenido)");
+        const fileName = m.file?.file_name || "Archivo adjunto";
+        const fileHtml = m.file_id
+          ? `<a class="bubble-attachment" href="${fileDownloadUrl(m.file_id)}" target="_blank" rel="noopener">📎 ${escapeHtml(fileName)}</a>`
+          : "";
         return `<div class="${rowClass}">
           <div class="${bubbleClass}">
-          <div>${m.content || "(sin contenido)"}</div>
+          <div>${content}</div>
+          ${fileHtml}
           <div class="muted msg-status" data-msg-status="${st}">
             ${meta}
           </div>
@@ -731,10 +784,12 @@
     const canDelete = !!activeConversation && activeConversation.type === "group";
     btnDeleteConversation.disabled = !canDelete;
     btnSendMessage.disabled = !activeConversation;
+    if (btnAttachFile) btnAttachFile.disabled = !activeConversation;
     renderConversations();
     renderMessages();
     await refreshPresence();
     if (activeConversation) {
+      await loadMessagesForConversation(activeConversation.id);
       await markConversationMessagesRead(activeConversation.id);
       await syncReceiptStatusForConversation(activeConversation.id);
       renderMessages();
@@ -761,45 +816,79 @@
     await setActiveConversation(null);
   }
 
-  async function sendMessageSimulated() {
+  async function uploadFile(file, messageId) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const params = new URLSearchParams({
+      file_type: "document",
+      uploader_id: session.user.id,
+      message_id: messageId,
+    });
+    const res = await fetch(apiUrl(`/files/upload?${params.toString()}`), {
+      method: "POST",
+      body: formData,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(body.detail || `Error subiendo archivo: HTTP ${res.status}`);
+    }
+    return body;
+  }
+
+  function clearPendingFile() {
+    pendingFile = null;
+    if (fileInput) fileInput.value = "";
+    if (filePreview) filePreview.hidden = true;
+    if (filePreviewName) filePreviewName.textContent = "";
+  }
+
+  async function sendMessageToApi() {
     if (!activeConversation) return;
     const content = messageInput.value.trim();
-    if (!content) return;
+    if (!content && !pendingFile) return;
 
-    const other = (activeConversation.members || []).find((m) => m !== session.user.id);
-    if (!other) {
-      showBanner("No se encontró receptor para este chat.", false);
-      return;
+    let fileInfo = null;
+    let created = null;
+    if (pendingFile) {
+      try {
+        fileInfo = await uploadFile(pendingFile, crypto.randomUUID());
+      } catch (e) {
+        showBanner("Error subiendo archivo: " + (e.message || e), false);
+        return;
+      }
+      created = await api("/messages/file", {
+        method: "POST",
+        body: JSON.stringify({
+          conversation_id: activeConversation.id,
+          sender_id: session.user.id,
+          file_id: fileInfo.id,
+          content: content || "Archivo adjunto",
+        }),
+      });
+    } else {
+      created = await api("/messages/", {
+        method: "POST",
+        body: JSON.stringify({
+          conversation_id: activeConversation.id,
+          sender_id: session.user.id,
+          content,
+        }),
+      });
     }
 
-    const messageId = crypto.randomUUID();
-    await api("/presence/messages", {
-      method: "POST",
-      body: JSON.stringify({
-        message_id: messageId,
-        sender_id: session.user.id,
-        recipient_id: other,
-      }),
-    });
-
-    const db = readFakeMessages();
-    db[activeConversation.id] = db[activeConversation.id] || [];
-    db[activeConversation.id].push({
-      message_id: messageId,
-      sender_id: session.user.id,
-      recipient_id: other,
-      content,
-      status: "SENT",
-    });
-    saveFakeMessages(db);
+    const saved = normalizeMessage(created.message, activeConversation);
+    if (fileInfo) saved.file = fileInfo;
+    const list = messagesByConversation.get(activeConversation.id) || [];
+    messagesByConversation.set(activeConversation.id, [...list, saved]);
     try {
       await syncReceiptStatusForConversation(activeConversation.id);
     } catch (_) {}
 
     messageInput.value = "";
+    clearPendingFile();
     renderMessages();
     renderConversations();
-    showBanner("Mensaje enviado.");
+    showBanner(fileInfo ? "Mensaje con archivo enviado." : "Mensaje enviado.");
   }
 
   async function createNotification() {
@@ -849,6 +938,9 @@
     await loadConversations();
     if (activeConversation && !conversations.some((c) => c.id === activeConversation.id)) {
       activeConversation = null;
+    }
+    if (activeConversation) {
+      await loadMessagesForConversation(activeConversation.id);
     }
     await syncReceiptStatusFromServerForAllMessages();
     await autoDeliverAllIncomingMessages();
@@ -919,11 +1011,27 @@
     };
     qs("btnSendMessage").onclick = async () => {
       try {
-        await sendMessageSimulated();
+        await sendMessageToApi();
       } catch (e) {
         showBanner(String(e.message || e), false);
       }
     };
+    if (btnAttachFile) {
+      btnAttachFile.onclick = () => fileInput && fileInput.click();
+    }
+    if (fileInput) {
+      fileInput.onchange = () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (file) {
+          pendingFile = file;
+          if (filePreviewName) filePreviewName.textContent = "📎 " + file.name;
+          if (filePreview) filePreview.hidden = false;
+        }
+      };
+    }
+    if (btnCancelFile) {
+      btnCancelFile.onclick = () => clearPendingFile();
+    }
     qs("btnCreateNotif").onclick = async () => {
       try {
         await createNotification();
@@ -985,6 +1093,11 @@
         "Conectado. Los estados de tus mensajes (Enviado -> Entregado -> Leído) se actualizan solos cada pocos segundos con el chat abierto.",
       );
     } catch (e) {
+      if (/user profile not found/i.test(String(e.message || e))) {
+        clearSession();
+        window.location.href = "/static/auth.html?session=expired";
+        return;
+      }
       showBanner(String(e.message || e), false);
     }
   }

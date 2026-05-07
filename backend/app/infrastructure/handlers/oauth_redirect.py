@@ -30,6 +30,10 @@ def _callback_uri(provider: str) -> str:
     return f"{_public_base()}/auth/oauth/callback/{provider}"
 
 
+def _frontend_base() -> str:
+    return os.environ.get('FRONTEND_PUBLIC_BASE_URL', 'http://127.0.0.1:3000').rstrip('/')
+
+
 def _jwt_secret() -> str:
     return os.environ.get('JWT_SECRET', 'change-me-in-production')
 
@@ -123,7 +127,7 @@ async def oauth_callback(
 
     def _redirect_result(ok: bool, payload: dict) -> RedirectResponse:
         query = urlencode({'ok': '1' if ok else '0', 'payload': json.dumps(payload)})
-        return RedirectResponse(url=f'/static/oauth_result.html?{query}', status_code=302)
+        return RedirectResponse(url=f'{_frontend_base()}/static/oauth_result.html?{query}', status_code=302)
 
     if error:
         return _redirect_result(
@@ -184,7 +188,7 @@ async def oauth_callback(
         # Primer acceso: pedir teléfono antes de crear perfil (unique_id = teléfono)
         pending = _create_oauth_pending_jwt('google', sub_str, email, full_name, picture)
         q = quote(pending, safe='')
-        return RedirectResponse(url=f'/static/oauth_phone.html?pending={q}', status_code=302)
+        return RedirectResponse(url=f'{_frontend_base()}/static/oauth_phone.html?pending={q}', status_code=302)
 
     return _redirect_result(
         False,
@@ -207,7 +211,7 @@ async def oauth_authorize(provider: str) -> RedirectResponse:
         client_id = os.environ.get('OAUTH_GOOGLE_CLIENT_ID')
         client_secret = os.environ.get('OAUTH_GOOGLE_CLIENT_SECRET')
         if (not client_id) or (not client_secret):
-            return RedirectResponse(url='/static/auth.html?oauth=missing&idp=google', status_code=302)
+            return RedirectResponse(url=f'{_frontend_base()}/static/auth.html?oauth=missing&idp=google', status_code=302)
         q = urlencode(
             {
                 'client_id': client_id,
@@ -220,4 +224,4 @@ async def oauth_authorize(provider: str) -> RedirectResponse:
         )
         return RedirectResponse(url=f'https://accounts.google.com/o/oauth2/v2/auth?{q}', status_code=302)
 
-    return RedirectResponse(url=f'/static/auth.html?oauth=unknown&idp={pid}', status_code=302)
+    return RedirectResponse(url=f'{_frontend_base()}/static/auth.html?oauth=unknown&idp={pid}', status_code=302)

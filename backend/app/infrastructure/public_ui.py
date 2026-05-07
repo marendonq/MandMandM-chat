@@ -1,27 +1,19 @@
 """
-UI mínima estática: redirección / → login/registro y montaje de /static.
+UI pública desacoplada: el backend solo redirige al microservicio frontend.
 """
-from pathlib import Path
+import os
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
 
-# backend/static (este archivo está en backend/app/infrastructure/)
-STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "static"
+
+def frontend_public_base_url() -> str:
+    return os.getenv("FRONTEND_PUBLIC_BASE_URL", "http://127.0.0.1:3000").rstrip("/")
 
 
 def mount_public_ui(app: FastAPI) -> None:
-    """Registra GET / → redirección a auth.html y monta archivos en /static."""
-    if not STATIC_DIR.is_dir():
-        STATIC_DIR.mkdir(parents=True, exist_ok=True)
+    """Registra GET / → redirección al frontend separado."""
 
     @app.get("/", include_in_schema=False)
     async def root_redirect() -> RedirectResponse:
-        return RedirectResponse(url="/static/auth.html", status_code=302)
-
-    app.mount(
-        "/static",
-        StaticFiles(directory=str(STATIC_DIR)),
-        name="static",
-    )
+        return RedirectResponse(url=f"{frontend_public_base_url()}/static/auth.html", status_code=302)

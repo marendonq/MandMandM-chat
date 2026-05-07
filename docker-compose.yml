@@ -8,6 +8,17 @@
 # MongoDB: conversaciones y mensajes (MONGO_URI / MONGO_DB_NAME en backend/.env).
 
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: mandmandm-frontend
+    environment:
+      FRONTEND_PUBLIC_BASE_URL: ${FRONTEND_PUBLIC_BASE_URL:-http://127.0.0.1:3000}
+      FRONTEND_API_BASE_URL: ${FRONTEND_API_BASE_URL:-http://127.0.0.1:8000}
+    ports:
+      - "3000:3000"
+
   mongo:
     image: mongo:7
     container_name: mandmandm-mongo

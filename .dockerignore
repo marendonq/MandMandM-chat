@@ -1,0 +1,11 @@
+.git
+.pytest_cache
+__pycache__
+*.pyc
+.venv
+.venv-local
+venv
+backend/.env
+backend/oauth_local.ps1
+oauth_local.ps1
+mandmandm-*-data
