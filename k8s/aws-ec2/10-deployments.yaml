@@ -6,7 +6,7 @@ metadata:
   labels:
     app: mandmandm-frontend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mandmandm-frontend
@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: quinterorendon/mandmandm-front:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: cadavidmateo90/mandmandm-front:1.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           envFrom:
@@ -28,166 +28,12 @@ spec:
             httpGet:
               path: /static/config.js
               port: 3000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 30
             periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /static/config.js
-              port: 3000
-            initialDelaySeconds: 15
-            periodSeconds: 20
           resources:
             requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 300m
-              memory: 256Mi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mandmandm-messages
-  namespace: mandmandm
-  labels:
-    app: mandmandm-messages
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: mandmandm-messages
-  template:
-    metadata:
-      labels:
-        app: mandmandm-messages
-    spec:
-      containers:
-        - name: messages
-          image: quinterorendon/mandmandm-messages:1.0.0
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8004
-          envFrom:
-            - configMapRef:
-                name: mandmandm-config
-            - secretRef:
-                name: mandmandm-secrets
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8004
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8004
-            initialDelaySeconds: 20
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mandmandm-files
-  namespace: mandmandm
-  labels:
-    app: mandmandm-files
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: mandmandm-files
-  template:
-    metadata:
-      labels:
-        app: mandmandm-files
-    spec:
-      containers:
-        - name: files
-          image: quinterorendon/mandmandm-files:1.0.0
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8005
-          envFrom:
-            - configMapRef:
-                name: mandmandm-config
-            - secretRef:
-                name: mandmandm-secrets
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8005
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8005
-            initialDelaySeconds: 20
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mandmandm-presence
-  namespace: mandmandm
-  labels:
-    app: mandmandm-presence
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: mandmandm-presence
-  template:
-    metadata:
-      labels:
-        app: mandmandm-presence
-    spec:
-      containers:
-        - name: presence
-          image: quinterorendon/mandmandm-presence:1.0.0
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8006
-          envFrom:
-            - configMapRef:
-                name: mandmandm-config
-            - secretRef:
-                name: mandmandm-secrets
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8006
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8006
-            initialDelaySeconds: 20
-            periodSeconds: 20
-          resources:
-            requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-
+              cpu: 30m
+              memory: 48Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -197,7 +43,7 @@ metadata:
   labels:
     app: mandmandm-auth
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mandmandm-auth
@@ -208,8 +54,8 @@ spec:
     spec:
       containers:
         - name: auth
-          image: quinterorendon/mandmandm-auth:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: cadavidmateo90/mandmandm-auth:1.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:
@@ -221,21 +67,12 @@ spec:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 20
-            periodSeconds: 20
+            initialDelaySeconds: 60
+            periodSeconds: 15
           resources:
             requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 30m
+              memory: 48Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -245,7 +82,7 @@ metadata:
   labels:
     app: mandmandm-users
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mandmandm-users
@@ -256,8 +93,8 @@ spec:
     spec:
       containers:
         - name: users
-          image: quinterorendon/mandmandm-users:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: cadavidmateo90/mandmandm-users:1.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8002
           envFrom:
@@ -269,21 +106,129 @@ spec:
             httpGet:
               path: /health
               port: 8002
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8002
-            initialDelaySeconds: 20
-            periodSeconds: 20
+            initialDelaySeconds: 60
+            periodSeconds: 15
           resources:
             requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-messages
+  namespace: mandmandm
+  labels:
+    app: mandmandm-messages
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-messages
+  template:
+    metadata:
+      labels:
+        app: mandmandm-messages
+    spec:
+      containers:
+        - name: messages
+          image: cadavidmateo90/mandmandm-messages:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8004
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-files
+  namespace: mandmandm
+  labels:
+    app: mandmandm-files
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-files
+  template:
+    metadata:
+      labels:
+        app: mandmandm-files
+    spec:
+      containers:
+        - name: files
+          image: cadavidmateo90/mandmandm-files:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8005
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8005
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mandmandm-presence
+  namespace: mandmandm
+  labels:
+    app: mandmandm-presence
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mandmandm-presence
+  template:
+    metadata:
+      labels:
+        app: mandmandm-presence
+    spec:
+      containers:
+        - name: presence
+          image: cadavidmateo90/mandmandm-presence:1.0.1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8006
+          envFrom:
+            - configMapRef:
+                name: mandmandm-config
+            - secretRef:
+                name: mandmandm-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8006
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 30m
+              memory: 48Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -293,7 +238,7 @@ metadata:
   labels:
     app: mandmandm-groups
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mandmandm-groups
@@ -304,8 +249,8 @@ spec:
     spec:
       containers:
         - name: groups
-          image: quinterorendon/mandmandm-groups:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: cadavidmateo90/mandmandm-groups:1.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8007
           envFrom:
@@ -317,21 +262,12 @@ spec:
             httpGet:
               path: /health
               port: 8007
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8007
-            initialDelaySeconds: 20
-            periodSeconds: 20
+            initialDelaySeconds: 60
+            periodSeconds: 15
           resources:
             requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 30m
+              memory: 48Mi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -341,7 +277,7 @@ metadata:
   labels:
     app: mandmandm-notifications
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mandmandm-notifications
@@ -352,8 +288,8 @@ spec:
     spec:
       containers:
         - name: notifications
-          image: quinterorendon/mandmandm-notifications:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: cadavidmateo90/mandmandm-notifications:1.0.1
+          imagePullPolicy: Always
           ports:
             - containerPort: 8008
           envFrom:
@@ -365,18 +301,9 @@ spec:
             httpGet:
               path: /health
               port: 8008
-            initialDelaySeconds: 10
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8008
-            initialDelaySeconds: 20
-            periodSeconds: 20
+            initialDelaySeconds: 60
+            periodSeconds: 15
           resources:
             requests:
-              cpu: 150m
-              memory: 192Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 30m
+              memory: 48Mi
