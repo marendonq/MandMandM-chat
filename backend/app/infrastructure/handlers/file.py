@@ -1,5 +1,9 @@
+import mimetypes
+from pathlib import Path
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse as BinaryFileResponse
 from app.application.services.file import (
     UploadFileService,
     GetFileService,
@@ -71,6 +75,28 @@ def get_file(
     try:
         entity = service.execute(file_id)
         return _to_response(entity)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{file_id}/download")
+@inject
+def download_file(
+    file_id: str,
+    service: GetFileService = Depends(Provide[Container.get_file_service]),
+):
+    try:
+        entity = service.execute(file_id)
+        file_path = Path(entity.storage_path)
+        if not file_path.exists() or not file_path.is_file():
+            raise HTTPException(status_code=404, detail="Stored file not found")
+
+        media_type, _ = mimetypes.guess_type(entity.file_name)
+        return BinaryFileResponse(
+            path=str(file_path),
+            media_type=media_type or "application/octet-stream",
+            filename=entity.file_name,
+        )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
