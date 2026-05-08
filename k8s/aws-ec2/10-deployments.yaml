@@ -116,45 +116,6 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mandmandm-conversations
-  namespace: mandmandm
-  labels:
-    app: mandmandm-conversations
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mandmandm-conversations
-  template:
-    metadata:
-      labels:
-        app: mandmandm-conversations
-    spec:
-      containers:
-        - name: conversations
-          image: cadavidmateo90/mandmandm-conversations:1.0.1
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8003
-          envFrom:
-            - configMapRef:
-                name: mandmandm-config
-            - secretRef:
-                name: mandmandm-secrets
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8003
-            initialDelaySeconds: 60
-            periodSeconds: 15
-          resources:
-            requests:
-              cpu: 30m
-              memory: 48Mi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: mandmandm-messages
   namespace: mandmandm
   labels:

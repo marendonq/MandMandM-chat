@@ -29,9 +29,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: mandmandm-conversations
+                name: mandmandm-groups
                 port:
-                  number: 8003
+                  number: 8007
           - path: /messages
             pathType: Prefix
             backend:

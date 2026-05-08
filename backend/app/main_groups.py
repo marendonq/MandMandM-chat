@@ -1,3 +1,6 @@
+# Microservicio: Groups Service
+# Puerto: 8007
+# Maneja: /conversations/* (gestión de grupos y conversaciones privadas)
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from pathlib import Path
@@ -14,6 +17,7 @@ app.container = container
 app.include_router(conversations.router)
 container.wire(modules=['app.infrastructure.handlers.conversations'])
 
+
 @app.get('/health')
 async def health():
-    return {'status': 'ok', 'service': 'groups'}
+    return {'status': 'ok', 'service': 'groups'}
