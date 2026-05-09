@@ -1,3 +1,9 @@
+"""Authentication HTTP handlers for the auth microservice.
+
+Exposes REST endpoints for user registration and login using FastAPI.
+Maps domain exceptions to appropriate HTTP status codes.
+"""
+
 from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends, HTTPException
 from app.infrastructure.container import Container
@@ -25,6 +31,14 @@ router = APIRouter(
 
 
 def _user_entity_to_schema(user) -> UserSchema:
+    """Convert a UserEntity domain object to a UserSchema response model.
+
+    Args:
+        user: The UserEntity to convert.
+
+    Returns:
+        A UserSchema with the user's data.
+    """
     return UserSchema(
         id=user.id,
         email=user.email,
@@ -40,6 +54,22 @@ def register(
     body: RegisterRequest,
     auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ) -> RegisterResponse:
+    """Register a new user account.
+
+    Creates a user with email/password authentication and returns
+    an access token along with the user data.
+
+    Args:
+        body: The registration request data.
+        auth_service: Injected authentication service.
+
+    Returns:
+        RegisterResponse with access token and user data.
+
+    Raises:
+        HTTPException 409: If email or phone is already registered.
+        HTTPException 400: If input validation fails.
+    """
     try:
         access_token, user, profile = auth_service.register(
             email=body.email,
@@ -74,6 +104,21 @@ def login(
     body: LoginRequest,
     auth_service: AuthService = Depends(Provide[Container.auth_service]),
 ) -> LoginResponse:
+    """Authenticate a user with email and password.
+
+    Verifies credentials and returns an access token for authenticated requests.
+
+    Args:
+        body: The login request data.
+        auth_service: Injected authentication service.
+
+    Returns:
+        LoginResponse with access token.
+
+    Raises:
+        HTTPException 401: If credentials are invalid.
+        HTTPException 400: If input validation fails.
+    """
     try:
         access_token = auth_service.login(email=body.email, password=body.password)
         return LoginResponse(access_token=access_token)

@@ -2,9 +2,21 @@ from abc import ABC, abstractmethod
 
 
 class AuthTokenPort(ABC):
-    """Puerto de salida: generación de tokens de acceso (JWT)."""
+    """Abstract port for authentication token generation.
+
+    Defines the contract for creating access tokens (e.g., JWT).
+    Implementations handle the cryptographic signing and token lifecycle.
+    """
 
     @abstractmethod
     def generate(self, subject: str) -> str:
-        """Genera un token de acceso para el sujeto (p. ej. user_id)."""
+        """Generate an access token for a given subject.
+
+        Args:
+            subject: The subject identifier (typically user_id) to encode
+                in the token.
+
+        Returns:
+            A signed access token string (e.g., JWT).
+        """
         raise NotImplementedError
